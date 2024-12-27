@@ -1,0 +1,23 @@
+{
+  "name": "starterpack_spa",
+  "version": "1.0.0",
+  "description": "CS52 starterpack for Single Page Apps",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukehaf/starterpack_SPA.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lukehaf/starterpack_SPA/issues"
+  },
+  "homepage": "https://github.com/lukehaf/starterpack_SPA#readme",
+  "devDependencies": {
+    "vite": "^6.0.6"
+  }
+}
