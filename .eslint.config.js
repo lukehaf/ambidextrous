@@ -1,6 +1,7 @@
 // eslint.config.js
+import react from 'eslint-plugin-react';
 import js from '@eslint/js'; // for the js.configs.recommended
-import stylistic from '@stylistic/eslint-plugin'; // for the additional stylistic default rules
+import stylistic from '@stylistic/eslint-plugin'; // for the additional stylistic default rules for js
 import globals from 'globals'; // for the globals.browser. ESLint makes no assumptions about what global variables exist
 // in your execution environment. Below we'll tell it to include global variables such as "console.log" which are
 // associated with web browsers.
@@ -10,10 +11,10 @@ export default [
   // js.configs.all applies all the rules, and is even pickier, and you'll end up manually disabling a lot more of them
   stylistic.configs['recommended-flat'],
   {
+    plugins: { react },
     languageOptions: {
-      globals: {
-        ...globals.browser,
-      },
+      parserOptions: { ecmaFeatures: { jsx: true } }, // enable jsx parsing
+      globals: { ...globals.browser },
     },
     rules: {
       'semi': 'error',
@@ -21,6 +22,17 @@ export default [
       // prefix stylistic rules with @stylistic/js
       '@stylistic/indent': ['error', 2],
       '@stylistic/semi': 'off',
+      // React-specific rules, from CS52
+      'react/jsx-uses-react': 2,
+      'react/jsx-uses-vars': 2,
+      'react/react-in-jsx-scope': 2,
+      'react/prop-types': 0,
+      'react/destructuring-assignment': 0,
+      'react/jsx-first-prop-new-line': 0,
+      'react/jsx-filename-extension': 0,
+      'jsx-a11y/click-events-have-key-events': 0,
+      'jsx-a11y/no-noninteractive-element-interactions': 0,
+      'react/jsx-one-expression-per-line': 0,
     },
   },
 ];
