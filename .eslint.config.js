@@ -1,72 +1,29 @@
 // eslint.config.js
-import js from "@eslint/js"; // for the js.configs.recommended
-import stylistic from '@stylistic/eslint-plugin' // for the additional stylistic default rules
-import globals from "globals"; // for the globals.browser. ESLint makes no assumptions about what global variables exist
+import js from '@eslint/js'; // for the js.configs.recommended
+import stylistic from '@stylistic/eslint-plugin'; // for the additional stylistic default rules
+import globals from 'globals'; // for the globals.browser. ESLint makes no assumptions about what global variables exist
 // in your execution environment. Below we'll tell it to include global variables such as "console.log" which are
 // associated with web browsers.
 
-
-
-
 export default [
-  stylistic.configs.customize({
-    // the following options are the default values
-    indent: 2,
-    quotes: 'single',
-    semi: false,
-    jsx: true,
-    // ...
-  }),
-  // ...your other config items
-]
-
-// export default [
-//     js.configs.recommended,
-//     // Use the recommended-flat config explicitly instead of spreading the whole plugin
-//     stylistic.configs['recommended-flat'], 
-//     {   
-//       languageOptions: {
-//         globals: {
-//         ...globals.browser
-//         }
-//       },
-//       // plugins: {
-//       //   '@stylistic': stylistic
-//       // },
-//       rules: {
-//         // semi: "error",
-//         // "prefer-const": "error",
-//         // prefix stylistic rules with @stylistic/js
-//         '@stylistic/indent': ['error', 2],
-//       }
-//     }
-//   ];
-
-
-
-
-// export default [
-//   js.configs.recommended,
-//   // js.configs.all applies all the rules, and is even pickier, and you'll end up manually disabling a lot more of them
-//   ...stylistic,
-//   //stylistic.configs['recommended-flat'],
-//     {   
-//         languageOptions: {
-//             globals: {
-//                 ...globals.browser
-//               }
-//         },
-//         plugins: {
-//             '@stylistic': stylistic
-//         },
-//         rules: {
-//             //semi: "error",
-//             //"prefer-const": "error",
-//             // prefix stylistic rules with @stylistic/js
-//             //'@stylistic/indent': ['error', 2],
-//         }
-//     }
-// ];
+  js.configs.recommended,
+  // js.configs.all applies all the rules, and is even pickier, and you'll end up manually disabling a lot more of them
+  stylistic.configs['recommended-flat'],
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+    rules: {
+      'semi': 'error',
+      'prefer-const': 'error',
+      // prefix stylistic rules with @stylistic/js
+      '@stylistic/indent': ['error', 2],
+      '@stylistic/semi': 'off',
+    },
+  },
+];
 
 // To change a rule’s severity, set the rule ID equal to one of these values:
 
@@ -76,14 +33,10 @@ export default [
 // Rules are typically set to "error" to enforce compliance with the rule during continuous integration testing,
 // pre-commit checks, and pull request merging because doing so causes ESLint to exit with a non-zero exit code.
 
-
-
-
-
-
-
 // // Here are the CS52 recommended settings. Apparently airbnb style hasn't been supported yet by the newest
 // // version of ESlint. Here's Tim's modification of the airbnb style guide
+
+// // USE PRETTIER FOR FORMATTING, NOT ESLINT LIKE TIM DOES.
 
 // {
 //   "extends": "airbnb",
