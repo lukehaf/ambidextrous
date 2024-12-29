@@ -11,6 +11,7 @@ export default [
   // js.configs.all applies all the rules, and is even pickier, and you'll end up manually disabling a lot more of them
   stylistic.configs['recommended-flat'],
   {
+    files: ['**/*.{js,jsx,mjs,cjs,ts,tsx}'],
     plugins: { react },
     languageOptions: {
       parserOptions: { ecmaFeatures: { jsx: true } }, // enable jsx parsing
@@ -19,9 +20,13 @@ export default [
     rules: {
       'semi': 'error',
       'prefer-const': 'error',
+      'no-unused-vars': ['error', { vars: 'all', args: 'none' }],
       // prefix stylistic rules with @stylistic/js
       '@stylistic/indent': ['error', 2],
       '@stylistic/semi': 'off',
+      '@stylistic/arrow-parens': 'off',
+      '@stylistic/jsx-one-expression-per-line': ['error', { allow: 'single-line' }], // lets you put multiple args on 1 line
+
       // React-specific rules, from CS52
       'react/jsx-uses-react': 2,
       'react/jsx-uses-vars': 2,
@@ -48,7 +53,7 @@ export default [
 // // Here are the CS52 recommended settings. Apparently airbnb style hasn't been supported yet by the newest
 // // version of ESlint. Here's Tim's modification of the airbnb style guide
 
-// // USE PRETTIER FOR FORMATTING, NOT ESLINT LIKE TIM DOES.
+// // enventually USE PRETTIER FOR FORMATTING, NOT ESLINT LIKE TIM DOES.
 
 // {
 //   "extends": "airbnb",
@@ -68,7 +73,7 @@ export default [
 //       "import/no-unresolved": [2, { "caseSensitive": false } ],
 //       "no-unused-vars": ["error", { "vars": "all", "args": "none" }], // this one's included in configs.recommended
 //       "no-underscore-dangle": 0,
-//       "arrow-body-style": 0,
+//       "arrow-body-style": 0, // I added this in
 //       "one-var": ["error", { "uninitialized": "always", "initialized": "never" }],
 //       "one-var-declaration-per-line": ["error", "initializations"],
 //       "max-len": ["error", 200],
