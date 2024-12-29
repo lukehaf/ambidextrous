@@ -1,0 +1,14 @@
+body, html {
+    font-family: "Roboto", sans-serif;
+    background: linear-gradient(to bottom, #87e0fd 0%,#53cbf1 40%,#05abe0 100%);
+    height: 100%;
+  }
+
+:root {
+  text-size-adjust: 100%;
+}
+
+.active {              // NavLink from react-router adds an .active class to the link you are currently on
+  color: pink;
+}
+  
