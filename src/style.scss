@@ -5,5 +5,10 @@ body, html {
   }
 
 :root {
-    text-size-adjust: 100%;
-  }
+  text-size-adjust: 100%;
+}
+
+.active {              // NavLink from react-router adds an .active class to the link you are currently on
+  color: pink;
+}
+  
