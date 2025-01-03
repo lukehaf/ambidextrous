@@ -9,19 +9,17 @@ import useStore from '../store';
 import '../style.scss';
 
 import Welcome from './welcome/welcome.jsx';
-import Test from './test/test.jsx';
+import TestHasThreeUIs from './test/test.jsx';
 
 // (props) might be needed here, IDK. Everything I write, though, uses zustand hooks rather than props.
 function App(props) {
-  const { currentScreen } = useStore();
+  const currentScreen = useStore(({ welcomeSlice }) => welcomeSlice.currentScreen);
   return (
     <div>
       {currentScreen === 'Welcome' && <Welcome />}
-      {currentScreen === 'Test' && <Test />}
+      {currentScreen === 'TestHasThreeUIs' && <TestHasThreeUIs />}
     </div>
   );
 };
-
-// Now work on Routing stuff:
 
 export default App;

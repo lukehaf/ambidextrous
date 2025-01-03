@@ -1,7 +1,9 @@
 import React from 'react';
+import useStore from '../../store';
 import styles from './study_info.module.scss';
 
 const StudyInfo = () => {
+  const gaveConsent = useStore(({ welcomeSlice }) => welcomeSlice.gaveConsent);
   return (
     <div className={styles.container}>
       <h1 className={styles.header}>Study Summary</h1>
@@ -42,7 +44,10 @@ const StudyInfo = () => {
       <p className={styles.paragraph}>
         I have read the above information about the “Memory Test of Order-Linking & Similarity-Linking”, and have been given time to reflect and reach out with any questions. By clicking the “I agree” button, this is taken as documentation of my consent to proceed with this study.
       </p>
-      <p className={styles.paragraph}>Thank you for participating, and I hope you find the test interesting & enjoyable!</p>
+
+      <button onClick={gaveConsent} className={styles.navButton}>I agree</button>
+
+      <p className={styles.paragraph}>Thank you for participating, and I hope you find the test interesting & enjoyable! After clicking "I agree", you will now be able to access the test via the other button after scrolling back to the top of this page.</p>
     </div>
   );
 };

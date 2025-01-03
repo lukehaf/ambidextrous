@@ -5,7 +5,7 @@ import useStore from '../../store';
 
 // here's the 3rd flexbox element
 function ParticipantCounter() {
-  const count = useStore((state) => state.participantsStillNeeded);
+  const count = useStore(({ welcomeSlice }) => welcomeSlice.participantsStillNeeded);
   return (
     <div className={styles.counter}>
       Counter: {count} participants still needed.
@@ -14,9 +14,9 @@ function ParticipantCounter() {
 }
 
 const Navbar = () => {
-  const consent = useStore((state) => state.consent); // subscribe to a piece of state, rather than fetching the whole state (this affects rerender frequency)
-  const goToTest = useStore((state) => state.goToTest);
-  const showStudyInfo = useStore((state) => state.showStudyInfo);
+  const consent = useStore(({ welcomeSlice }) => welcomeSlice.consent); // subscribe to a piece of state, rather than fetching the whole state (this affects rerender frequency)
+  const goToTest = useStore(({ welcomeSlice }) => welcomeSlice.goToTest);
+  const showStudyInfo = useStore(({ welcomeSlice }) => welcomeSlice.showStudyInfo);
   return (
     <div className={styles.navbar}>
       <button onClick={showStudyInfo} className={styles.navButton}>Information about the test</button>
