@@ -1,15 +1,37 @@
+.progressContainer {
+    width: 500px;
+    height: 20px;
+    background: rgb(221, 222, 222);
+    border-radius: 5px;
+}
 
 .progressBar {
-    width: 100px;
-    height: 100px;
-    background: red;
-    position: relative;
-    animation-name: example;
-    animation-duration: 3s;  
+    height: 100%;
+    width: 50%;
+    background: rgb(83, 174, 83);
+    border-radius: 5px;
+    animation-name: shrink; // here's what the keyframes animation is called
+    animation-duration: 3s;  // default; it's specific to the story
+    animation-fill-mode: forwards; // makes the last frame of the animation persist after 3s
+}
+ 
+@keyframes shrink {
+    0% {opacity: 0.5; width: 100%;}
+    20% {opacity: 0;}
+    40% {opacity: 0;}
+    80% {opacity: 1;}
+    100% {width: 0%;}
+}
+
+.delayEchoNames {
+    opacity: 0;
+    animation-name: showEchoNames;
+    animation-delay: 2s; // default
+    animation-duration: 2s; // default
     animation-fill-mode: forwards;
-  }
-  
-  @keyframes example {
-    from {top: 0px;}
-    to {top: 200px; background-color: blue;}
-  }
+}
+
+@keyframes showEchoNames {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
