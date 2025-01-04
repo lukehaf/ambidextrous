@@ -3,7 +3,7 @@ import React from 'react';
 const EchoNames = () => {
   return (
     <div>
-      <input placeholder="EchoNames UI placeholder" />
+      <input placeholder="domino UI placeholder" />
     </div>
   );
 };

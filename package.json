@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "_comment": "these scripts are what let me type npm run dev or npm run build in terminal. (dev goes to localhost, instead of using a python webserver. Build creates dist folder.)"
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,8 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.3",
-    "sass": "^1.83.0",
+    "sass": "^1.83.0", 
+    "_comment": "sass, as installed by npm, is a distribution of dart-sass, which (doesn't run into @import problems). Those were caused by node-sass, a different css preprocessor which is now deprecated.",
     "vite": "^6.0.6",
     "vite-plugin-eslint": "^1.8.1"
   },

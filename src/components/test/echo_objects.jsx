@@ -1,8 +1,7 @@
 import React from 'react';
 import styles from './echo_objects.module.scss';
 
-import EchoNames from './echo_names.jsx';
-const animationDuration = 7;
+const animationDuration = 7; // this should maybe be specific to the story's wordcount
 
 const CustomProgressBar = () => {
   return (
@@ -20,7 +19,7 @@ const EchoObjects = () => {
       <CustomProgressBar />
       {/* Delay EchoNames's appearance until once the progressbar finishes. */}
       <div className={styles.delayEchoNames} style={{ animationDelay: `${animationDuration - 2}s` }}>
-        <EchoNames />
+        <input placeholder="domino UI placeholder" />
       </div>
     </div>
   );
