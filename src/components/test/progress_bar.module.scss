@@ -1,6 +1,7 @@
-// this should be purple, and I have to make a second progressbar, styled green, which is fast and for the names.
-// but let them inherit the shared styles...?
+// This file's intended for styling the two progress bars. 
 
+// names-bar is green, quick, and has the same duration for each name.
+// objects-bar is purple, slower, with a varying duration (specified for each object-pair.)
 .progressContainer {
     width: 500px;
     height: 20px;

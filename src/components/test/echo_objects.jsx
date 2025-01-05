@@ -1,5 +1,14 @@
 import React from 'react';
-import styles from './echo_objects.module.scss';
+import styles from './progress_bar.module.scss';
+
+// names-bar is green, quick, and has the same duration for each name.
+// objects-bar is purple, slower, with a varying duration (specified for each object-pair.)
+// How should I make sure that THIS progress bar receives the correct styles?
+//  Either I put <div className={styles.purple}
+//      Will ^^ get all the .purple styles, and the shared styles?
+//      if I write .purple @include (mixin of the shared styles), it will.
+//      is there a way to do the same thing, using nesting/indents?
+//  or I
 
 const animationDuration = 7; // this should maybe be specific to the story's wordcount
 
