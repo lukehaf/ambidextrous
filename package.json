@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "comment": "these scripts are what let me type npm run dev or npm run build in terminal. (dev goes to localhost, instead of using a python webserver. Build creates dist folder.)"
+    "preview": "vite preview"
   },
+  "comment1": "these scripts are what let me type npm run dev or npm run build in terminal. (dev goes to localhost, instead of using a python webserver. Build creates dist folder.)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lukehaf/starterpack_SPA.git"
@@ -25,7 +25,6 @@
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.3",
     "sass": "^1.83.0", 
-    "comment": "sass, as installed by npm, is a distribution of dart-sass, which (doesn't run into @import problems). Those were caused by node-sass, a different css preprocessor which is now deprecated.",
     "vite": "^6.0.6",
     "vite-plugin-eslint": "^1.8.1"
   },
@@ -40,5 +39,7 @@
     "react-router": "^7.1.1",
     "react-router-dom": "^7.1.1",
     "zustand": "^5.0.2"
-  }
+  },
+  "comment2": "sass, as installed by npm, is a distribution of dart-sass, which (doesn't run into @import problems). Those were caused by node-sass, a different css preprocessor which is now deprecated."
 }
+
