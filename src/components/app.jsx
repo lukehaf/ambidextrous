@@ -9,7 +9,7 @@ import useStore from '../store';
 import '../style.scss';
 
 import Welcome from './welcome/welcome.jsx';
-import TestHasThreeUIs from './test/test.jsx';
+import Test from './test/test.jsx';
 
 // (props) might be needed here, IDK. Everything I write, though, uses zustand hooks rather than props.
 function App(props) {
@@ -17,7 +17,7 @@ function App(props) {
   return (
     <div>
       {currentScreen === 'Welcome' && <Welcome />}
-      {currentScreen === 'TestHasThreeUIs' && <TestHasThreeUIs />}
+      {currentScreen === 'Test' && <Test />}
     </div>
   );
 };

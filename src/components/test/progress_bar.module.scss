@@ -12,11 +12,20 @@
 .progressBar {
     height: 100%;
     width: 50%;
-    background: rgb(83, 174, 83);
     border-radius: 5px;
     animation-name: shrink; // here's what the keyframes animation is called
-    animation-duration: 3s;  // default; it's specific to the story
+    animation-duration: 3s;  // default. Name-pairs use the default. Object-pairs have custom durations, much longer than 3s, since it's for a story (not for typing). Objects they can type it as slowly as they want.
     animation-fill-mode: forwards; // makes the last frame of the animation persist after 3s
+
+    &_green {
+        @extend .progressBar;
+        background: rgb(83, 174, 83);
+    }
+    &_purple {
+        @extend .progressBar;
+        background: rgb(156, 83, 174);
+    }
+    
 }
  
 @keyframes shrink {
@@ -27,15 +36,15 @@
     100% {width: 0%;}
 }
 
-.delayEchoNames {
+.delayDomino {
     opacity: 0;
-    animation-name: showEchoNames;
+    animation-name: showDomino;
     animation-delay: 2s; // default
     animation-duration: 2s; // default
     animation-fill-mode: forwards;
 }
 
-@keyframes showEchoNames {
+@keyframes showDomino {
     0% {opacity: 0;}
     100% {opacity: 1;}
 }
