@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import useStore from '../../store/index.js'; // Zustand store
+import useStore from '../../store/index.js';
 
 function Domino() {
   const targetString = useStore(({ testSlice }) => testSlice.targetString); // targetString is what users have to type. It's an array of single characters with styles. //Each character is wrapped in a <span> with individual styles for color and background.
@@ -29,6 +29,14 @@ function Domino() {
       dominoRef.current.focus();
     }
   }, []);
+
+  //////////////////////////////////////////////////
+  // domino_left shows gray text.
+  // // userEntry appears in black, and lints red if incorrect.
+  // domino_left takes one space.
+  // // if correct, nothing is submitted, and domino_right focuses.
+  // // if incorrect (including wrong length), userEntry is submitted, and domino_left is cleared/reset. Domino_pair is not cleared/reset; the time keeps going.
+  // domino_left handles backspace. It submits, and clears/resets domino_left, but doesn't clear/reset domino_pair. (the time keeps going.)
 
   // Automatically place caret at the end of the userEntry string (on mount and when userEntry changes).
   useEffect(() => {
@@ -149,7 +157,7 @@ function Domino() {
       ref={dominoRef} // so useEffect can auto-focus this div on mount
       contentEditable={true} // Disables cursor placement by clicking. Enter & Tab are disabled. Only typing and backspace are supported.
       suppressContentEditableWarning={true} // React isn't designed to manage contentEditable elements safely, and gives a warning. Don't disable this warning unless you're confident you're manually handling all updates to the DOM in the contentEditable area (including user input), & disabling the contentEditable div's desire to display its own stuff, & explicitly only showing letters which are from the react state.
-      tabIndex={0} // Make div programmatically focusable
+      tabIndex={0} // Make div focusable
       onKeyDown={handleKeyDown}
       onMouseDown={(e) => e.preventDefault()} // Prevents cursor placement via mouse clicks
       style={{
@@ -170,7 +178,7 @@ function Domino() {
       <span>
         {userEntry.map((t, index) => ( // iterate over the array & return a new array (of <span> react elements). // For each element in the array (t), the map function executes the code inside the arrow function (t, index) => ( ... )
           <span
-            key={index} // The key prop is required by React when rendering lists to uniquely identify each element. Additional use: incrementing key, so React thinks it's a different key, & rerenders it/resets its state.
+            key={index} // The key prop is required by React when rendering lists to uniquely identify each element.
             style={{
               backgroundColor: t.backgroundColor,
               padding: '0px',
@@ -206,30 +214,3 @@ function Domino() {
 }
 
 export default Domino;
-
-// // The scrollToEnd function ensures the container scrolls to the latest character as the user types.
-
-// import React, { useRef, useState } from 'react';
-//
-// const scrollToEnd = () => {
-//   const container = containerRef.current;
-//   if (container) {
-//     container.scrollLeft = container.scrollWidth; // Scroll to the end
-//   }
-// };
-
-// React.useEffect(scrollToEnd, [text]); // Scroll whenever text changes
-
-// return (
-//   <div
-//     ref={containerRef}
-////////////////////////////////////////////////////////////////////
-
-// Here's some timer logic
-
-// const [startTime, setStartTime] = useState(null); // useState(<initialize the state here>) is a react hook for managing local state, without cluttering the zustand store.
-
-// // Set startTime when component first renders
-// useEffect(() => {
-//   setStartTime(Date.now());
-// }, []); // Empty dependency array means it runs only once, on mount

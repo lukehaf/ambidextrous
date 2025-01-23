@@ -25,7 +25,7 @@ export default [
       '@stylistic/indent': ['error', 2],
       '@stylistic/semi': 'off',
       '@stylistic/arrow-parens': 'off',
-      '@stylistic/jsx-one-expression-per-line': ['error', { allow: 'single-line' }], // lets you put multiple args on 1 line
+      '@stylistic/jsx-one-expression-per-line': ['error', { allow: 'non-jsx' }], // lets you put a jsx comment on the same line as a <element>, but prevents 2 elements on the same line. Also lets you put a single child on same line.
 
       // React-specific rules, from CS52
       'react/jsx-uses-react': 2,

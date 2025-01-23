@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/jsx-one-expression-per-line */
 // welcome_text.jsx
 
 // styled by chatGPT, unaware of style.scss. I might style it more later

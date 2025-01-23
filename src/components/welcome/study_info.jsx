@@ -14,7 +14,9 @@ const StudyInfo = () => {
         The memory test is all online, and takes at most 30 minutes to complete. There is a listening phase which involves “echoing back” (typing) several pairs of words that are shown onscreen & played via audio. Secondly, there is a recall-phase where participants’ recall of these pairs of words is assessed. Compensation is approximately $20 (via Venmo) upon completion of the study, with an incentive for higher accuracy & fast response times (described below).
       </p>
       <p className={styles.paragraph}>
-        Please feel free to contact me at <a href="mailto:Luke.D.Hafermann.25@Dartmouth.edu">Luke.D.Hafermann.25@Dartmouth.edu</a> if you have further questions about the study not covered here on this informational page.
+        Please feel free to contact me at
+        <a href="mailto:Luke.D.Hafermann.25@Dartmouth.edu">Luke.D.Hafermann.25@Dartmouth.edu</a>
+        if you have further questions about the study not covered here on this informational page.
       </p>
 
       <h2 className={styles.subheader}>What does participation involve?</h2>

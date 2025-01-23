@@ -17,11 +17,11 @@
     animation-duration: 3s;  // default. Name-pairs use the default. Object-pairs have custom durations, much longer than 3s, since it's for a story (not for typing). Objects they can type it as slowly as they want.
     animation-fill-mode: forwards; // makes the last frame of the animation persist after 3s
 
-    &_green {
+    &_names {
         @extend .progressBar;
         background: rgb(83, 174, 83);
     }
-    &_purple {
+    &_objects {
         @extend .progressBar;
         background: rgb(156, 83, 174);
     }
@@ -29,7 +29,7 @@
 }
  
 @keyframes shrink {
-    0% {opacity: 0.5; width: 100%;}
+    0% {opacity: 0.9; width: 100%;}
     20% {opacity: 0;}
     40% {opacity: 0;}
     80% {opacity: 1;}
