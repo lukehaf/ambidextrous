@@ -24,19 +24,17 @@ const DominoStack = () => {
 
   return (
     <div className={styles.dominoStack}>
-      {Array.from({ length: dominoStackHeight }).map((_, pairIndex) => (
+      {Array.from({ length: dominoStackHeight }).map((_, pairIndex) => ( // usually, dominoes get their pairIndex from the store. However, the dominoStack generates its dominoes' pairIndices from the map function, which then correspond with pairIndices in the store.
         <div key={pairIndex} className={styles.dominoPair}>
           <TestInput
             key={`left-${dominoStackResults[pairIndex].leftHalf.wrongSubmissions.length}`} // this resolves to `left-0`, `left-1`, etc, depending on which attempt this is
-            pairIndex={pairIndex}
-            whichHalf="leftHalf"
-            whichAttempt={dominoStackResults[pairIndex].leftHalf.wrongSubmissions.length + 1}
+            pairIndex={pairIndex} // the store doesn't know this. There are multiple dominoes onscreen at once!
+            leftOrRightHalf="leftHalf" // the store doesn't know this.
           />
           <TestInput
             key={`right-${dominoStackResults[pairIndex].rightHalf.wrongSubmissions.length}`}
             pairIndex={pairIndex}
-            whichHalf="rightHalf"
-            whichAttempt={dominoStackResults[pairIndex].rightHalf.wrongSubmissions.length + 1}
+            leftOrRightHalf="rightHalf"
           />
         </div>
       ))}
