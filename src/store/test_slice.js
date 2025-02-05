@@ -44,62 +44,83 @@ export default function createTestSlice(set, get) {
 
       whichScreen: null, // stub. Currently I'm using the legacy currentScreenTest. // possible values: 'TestHasThreeUIs', 'EchoNames', 'EchoObjects', 'Recall', 'DominoStack'.
 
-      // maybe append "pointer" to the below echoObjects and echoNames objects? (Definitely do so if these objects contain pointers which are used to access parts of presentables or results.)
-      echoNames: {},
-      echoObjects: {}, // maybe the two echo-screens have identically shaped objects? Then I could combine the two objects into one, since their screens never render at the same time.
-      // here I'm assuming that echoNames & echoObjects can listen to identically shaped objects:
-      echo: {
+      // here I'm assuming that echoNames & echoObjects can listen to an identically shaped object:
+      echoPointer: { // listened to by the EchoNames component and the EchoObjects component
+        // EchoNames and EchoObjects listens to a reset key for its one constituent Domino component
+        resetKey: '',
+        newDominoResetKey: ({ namesOrObjects, listHalf, lap, pairIndex, rep },
+          attempt, // (wrongSubmissions.length() + 1),
+        ) => set((draftState) => { draftState.testSlice.currentScreen.echoPointer.resetKey = `${namesOrObjects}-${listHalf}-${lap}-${pairIndex}-${rep}-${attempt}`; }, false, 'newDominoResetKey'),
+        /// ///////// CALL USING GET() WHENEVER ONE OF THE DEPENDENCIES CHANGES
 
-        // Domino components (of type echo) listen to dominoPointer. It contains everything they need.
-        // dominoPointer subsets `presentables` & `results` & contains display state.
-        dominoPointer: {
-          // keys for subsetting:
-          namesOrObjects: 'objects',
-          listHalf: 'one',
-          lap: 0, // also used by echo Domino components, as part of their reset-key.
-          pairIndex: 0, // I like the 02413 order because you’re not consciously chaining anything until the last moment. It’s just a faith in the process kind of thing. // const scrambledPairIndex = (pairIndex < Math.ceil(dominoStackHeight / 2)) ? (pairIndex * 2) : ((pairIndex - Math.ceil(dominoStackHeight / 2)) * 2 + 1); // use the modulo operator to cycle the indices back when pairIndex exceeds half the height.
-          rep: 0, // also used by echo Domino components, as part of their reset-key.
-          // keys for display-type & submission-logic:
-          echoOrRecall: 'echo', // (2vs1 space logic depends on this, and whether the domino grabs 2 words or just 1.) // the domino will also get passed an echo prop by its parent, so it knows to listen to the echo.dominoPointer object. But also have the echo key inside the echo.dominoPointer, so only dominoPointer gets passed into the domino, instead of also passing in an auxilliary prop object.
-          // obsolete keys:
-          // //   scrambledPairIndex: // no need for an additional scrambledPairIndex anymore, for echo_objects. pairIndex points to a location in presentables and results, independent from the order in which the 5 echo_objects screens are presented.
-        },
+        storyText: '',
+        storyTime: null,
+        updateStoryAndTime: (listHalf, pairIndex) => set((draftState) => {
+          draftState.testSlice.currentScreen.echoPointer.storyText = draftState.testSlice.presentables.targetPairs.objects[listHalf][pairIndex].storyText;
+          draftState.testSlice.currentScreen.echoPointer.storyTime = draftState.testSlice.presentables.targetPairs.objects[listHalf][pairIndex].storyTime;
+        }, false, 'updateStoryAndTime'),
+        // CALL WHENEVER THE DOMINOPAIR CHANGES, if it's an object-pair that's getting shown next. otherwise have storyText and storyTime be null
+      },
+      echo_dominoPointer: { // listened to by the Domino component (that renders inside an Echo component).
+        // echo_DominoPointer subsets `presentables` & `results` & contains display state.
+
+        // keys for subsetting:
+        namesOrObjects: 'objects',
+        listHalf: 'one',
+        lap: 0, // also used by echo Domino components, as part of their reset-key.
+        pairIndex: 0, // I like the 02413 order because you’re not consciously chaining anything until the last moment. It’s just a faith in the process kind of thing. // const scrambledPairIndex = (pairIndex < Math.ceil(dominoStackHeight / 2)) ? (pairIndex * 2) : ((pairIndex - Math.ceil(dominoStackHeight / 2)) * 2 + 1); // use the modulo operator to cycle the indices back when pairIndex exceeds half the height.
+        rep: 0, // also used by echo Domino components, as part of their reset-key.
+        // keys for display-type & submission-logic:
+        echoOrRecall: 'echo', // (2vs1 space logic depends on this, and whether the domino grabs 2 words or just 1.) // the domino will also get passed an echo prop by its parent, so it knows to listen to the echo.dominoPointer object. But also have the echo key inside the echo.dominoPointer, so only dominoPointer gets passed into the domino, instead of also passing in an auxilliary prop object.
+        // obsolete keys:
+        // //   scrambledPairIndex: // no need for an additional scrambledPairIndex anymore, for echo_objects. pairIndex points to a location in presentables and results, independent from the order in which the 5 echo_objects screens are presented.
       },
 
       ////////////////////////////////////////////
-      /// /// NEXT:
-      /// // look at notion, and make a reset key for the individual dominoes
-      // // then make the domino_stack listen to its reset key, and the domino in echo listen to its reset key, and the domino in the dominoStack listen to its reset key.
+      /// /// NEXT: hurray, now I have a resetKey for each domino!
+
+      // now make the domino in echo listen to its reset key
       // // then revise all the domino_logic, to handle the two different domino_pointers.
       /////////////////////////////////
+      recallPointer: {
+        // the Recall component (dominoStack) listens to a top-level reset key, and an objectful of domino-level reset keys.
 
-      recall: {
-        // the whole dominoStack only listens to one thing: a reset key
         resetKey: '',
-        newResetKey: (namesOrObjects, listHalf, lap) => set((draftState) => { draftState.testSlice.currentScreen.recall = `${namesOrObjects}-${listHalf}-${lap}`; }, false, 'newResetKey'), // using just "lap" as the reset key wouldn't be sufficient, if I decide to change # of laps to 1.
-        // call newResetKey() whenever one of its 3 dependencies changes. This can happen inside dominoPointers; the setters for the 3 dependencies just need to include a get().updateCatKey(); after their set();. & that’s great. It helps show who’s listening, (in addition to the one component per object), and avoid mysterious dependencies.
+        newResetKey: (namesOrObjects, listHalf, lap) => set((draftState) => { draftState.testSlice.currentScreen.recallPointer.resetKey = `${namesOrObjects}-${listHalf}-${lap}`; }, false, 'newResetKey'), // using just "lap" as the reset key wouldn't be sufficient, if I decide to change # of laps to 1.
+        /// //// CALL newResetKey() whenever one of its 3 dependencies changes. This can happen inside dominoPointers; the setters for the 3 dependencies just need to include a get().updateCatKey(); after their set();. & that’s great. It helps show who’s listening, (in addition to the one component per object), and avoid mysterious dependencies.
 
-        /// //////////////////// Here's what all the 10 dominoes share:
-        dominoPointers: { // there should be 10 dominoPointers, right? Probably initialized to the right length by a function?
-          // some of these keys also exist as props to the domino, but it's nice to have them all internal as well, so just dominoPointer needs to be passed as an argument/prop.
-          // keys for subsetting:
-          namesOrObjects: 'objects',
-          listHalf: 'one',
-          lap: 0, // used as a reset-key for the dominoStack.
-          pairIndex: 0, // (also a prop)
-          // keys for display-type & submission-logic:
-          echoOrRecall: 'echo', // (also a prop) // (2vs1 space logic depends on this, and whether the domino grabs 2 words or just 1.) // echoOrRecall is also a prop; duplicate it here, though.
-          leftOrRight: 'leftHalf', // (also a prop) (for display-type & submission-logic) (controls whether the grey text is shown, and whether they get unlimited tries.)
-          focus: false, // Listened to by dominoes that know they're part of a dominoStack. // I NEED TO INITIALIZE WHICH DOMINO STARTS OUT FOCUSED. deal with that when I make the setFocus.
-          // there only need to be 5 of the following. (also concern display-type)
-          reinforcementNeeded: null, // listened to by domino-pairs that know they're part of a dominoStack. // for IDK-button submissions or incorrect rightHalf followed by a correct rightHalf.
-          rightHalfGrey: false, // (for when the rightHalf needs to show grey, and behave like a leftHalf, IF they've clicked the IDK button or correctly submitted the rightHalf following an incorrect submission of rightHalf.)
+        dominoResetKeys: [], // INITIALIZE THIS to be dominoStackHeight long, and be made of objects with leftHalf & rightHalf
+        newDominoResetKey: ({ namesOrObjects, listHalf, lap },
+          pairIndex, leftOrRightHalf, // for subsetting
+          attempt, // (wrongSubmissions.length() + 1),
+        ) => set((draftState) => { draftState.testSlice.currentScreen.recallPointer.dominoResetKeys[pairIndex][leftOrRightHalf] = `${namesOrObjects}-${listHalf}-${lap}-${attempt}`; }, false, 'newDominoResetKey'),
+        /// ///////// CALL USING GET() WHENEVER ONE OF THE DEPENDENCIES CHANGES
 
-          // obsolete keys:
-          // //   whichAttempt: 0, // this prop's no longer needed. It was going to be for moving them on after 1 attempt on recall (rightHalf).
-          // //   scrambledPairIndex: // no need for an additional scrambledPairIndex anymore, for echo_objects. pairIndex points to a location in presentables and results, independent from the order in which the 5 echo_objects screens are presented.
-          // //   rep: 0, // used as a reset-key for the echos. (Domino-stack gets one rep per domino; no need for a reset.)
-        },
+        dominoStackHeight: (names.dominoHeight === objects.dominoHeight) ? names.dominoHeight : null, // I'm currently assuming both lists have the same # of pairs, and that only one recallPointer is needed. (Or, I could have a setter, which is called by get() whenever objects changes to names)
+      },
+
+      recall_dominoPointers: { // listened to by the Domino components (that render inside a Recall component).
+        ////////////////////////////////
+        // there should be 10 dominoPointers, right? Probably initialized to the right length by a function?
+        // some of these keys also exist as props to the domino, but it's nice to have them all internal as well, so just dominoPointer needs to be passed as an argument/prop.
+        // keys for subsetting:
+        namesOrObjects: 'objects',
+        listHalf: 'one',
+        lap: 0, // used in the reset-key for the dominoStack.
+        pairIndex: 0, // (also a prop)
+        // keys for display-type & submission-logic:
+        echoOrRecall: 'echo', // (also a prop) // (2vs1 space logic depends on this, and whether the domino grabs 2 words or just 1.) // echoOrRecall is also a prop; duplicate it here, though.
+        leftOrRight: 'leftHalf', // (also a prop) (for display-type & submission-logic) (controls whether the grey text is shown, and whether they get unlimited tries.)
+        focus: false, // Listened to by dominoes that know they're part of a dominoStack. // I NEED TO INITIALIZE WHICH DOMINO STARTS OUT FOCUSED. deal with that when I make the setFocus.
+        // there only need to be 5 of the following. (also concern display-type)
+        reinforcementNeeded: null, // listened to by domino-pairs that know they're part of a dominoStack. // for IDK-button submissions or incorrect rightHalf followed by a correct rightHalf.
+        rightHalfGrey: false, // (for when the rightHalf needs to show grey, and behave like a leftHalf, IF they've clicked the IDK button or correctly submitted the rightHalf following an incorrect submission of rightHalf.)
+
+        // obsolete keys:
+        // //   whichAttempt: 0, // this prop's no longer needed. It was going to be for moving them on after 1 attempt on recall (rightHalf).
+        // //   scrambledPairIndex: // no need for an additional scrambledPairIndex anymore, for echo_objects. pairIndex points to a location in presentables and results, independent from the order in which the 5 echo_objects screens are presented.
+        // //   rep: 0, // used as a reset-key for the echos. (Domino-stack gets one rep per domino; no need for a reset.)
+
       },
     },
     presentables: {

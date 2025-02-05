@@ -16,11 +16,9 @@ const ProgressBar = () => {
 };
 
 const EchoNames = () => {
-  const dominoResetKey = useStore(({ testSlice }) => testSlice.dominoResetKey); // here's LUKE'S key, from the zustand store. when this key changes it triggers a domino rerender, since it's placed here on the domino component.
+  const resetKey = useStore((state) => state.testSlice.currentScreen.echoPointer.resetKey);
   return (
-    <div key={dominoResetKey}
-      // The key prop is required by React when rendering lists to uniquely identify each element. Additional use: incrementing key, so React thinks it's a different key, & rerenders it/resets its state.
-    >
+    <div key={resetKey}>
       <Domino />
       <ProgressBar />
     </div>
