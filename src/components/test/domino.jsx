@@ -4,6 +4,9 @@ import { initializeRemainderString, handleKeyDown } from './domino_logic.jsx';
 
 function Domino(props) {
   const dominoPointer = useStore((state) => state.testSlice.currentScreen.dominoPointer); // dominoPointer subsets `presentables` & `results`, & contains display state. `Props` is auxiliary, and is passed into dominoes which reside in a dominoStack.
+  const dominoPointer = useStore((state) => state.testSlice.currentScreen[props.echoOrRecall].dominoPointer); // no, it has to conditionally use props.echoOrRecall; they have diff structures.
+
+
 
   // useState() is a react hook for managing state locally (within the component). Helps unclutter the Zustand store.
   const [remainderString, setRemainderString] = useState(initializeRemainderString(dominoPointer, props)); // remainderString is what users have left to type. It's an array of single-character-objects which get mapped into single-char <span> elements.
@@ -96,7 +99,7 @@ function Domino(props) {
       <span>
         {userEntry.map((t, index) => ( // iterate over the array & return a new array (of <span> react elements). // For each element in the array (t), the map function executes the code inside the arrow function (t, index) => ( ... )
           <span
-            key={index} // The key prop is required by React when rendering lists to uniquely identify each element. Additional use: incrementing key, so React thinks it's a different key, & rerenders it/resets its state.
+            key={index} // The key prop is required by React when rendering lists to uniquely identify each element. // Additional use (not going on here): incrementing key, so React thinks it's a different key, & rerenders it/resets its state.
             style={{
               backgroundColor: t.backgroundColor,
               padding: '0px',

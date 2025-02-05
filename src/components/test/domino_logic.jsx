@@ -43,20 +43,6 @@ export const initializeRemainderString = (dominoPointer, props) => {
   // Default to an empty array if conditions are not met
   return [];
 };
-/// //// ALL THE KEYS IN GENERAL
-// dominoPointer subsets `presentables` & `results` & contains display state.
-// // keys for subsetting:
-// //     namesOrObjects
-// //     listHalf
-// //     pairIndex (overwritten by props.pairIndex, if it is defined)
-// //     whichAttempt (increments for spaces and backspaces, if incorrect)
-// // keys for display-type & submission-logic:
-// //     echoOrRecall (2vs1 space logic depends on this, and whether the domino grabs 2 words or just 1.)
-// //     HMMM DO WE NEED ANOTHER KEY? The rightHalf needs to show grey, and behave like a leftHalf, IF they've clicked the IDK button or correctly submitted the rightHalf following an incorrect submission of rightHalf.
-
-// props exists only for the dominoes which reside in a dominoStack.
-// //     pairIndex (for subsetting & focus)
-// //     leftOrRight (for display-type & submission-logic) (controls whether the grey text is shown, and whether they get unlimited tries.)
 
 export const handleKeyDown = (e, // "e" is the event.
   // handleKeyDown uses these hooks to update remainderString and userEntry.
@@ -66,9 +52,12 @@ export const handleKeyDown = (e, // "e" is the event.
     targetLength, // correct submissions have to be targetLength long. // targetLength initializes off the first remainderString render & is ready for the 2nd render.
     firstSpace }, // firstSpace becomes true in order to track whether they've pressed the spacebar a first time yet
 ) => {
-// I BET SETWRONGSUBMISSION NEEDS A REFORMATTED RESULTS OBJECT, AND TO BE PASSED THE DOMINOPOINTER.
-  const setWrongSubmission = useStore((store) => store.testSlice.setWrongSubmission);// record userEntry in the store. Called only in the event of a wrong submission. (wrongChar === true) (or wrongLength?) (where a submission is triggered by space (or space2), or by backspace)
-  //                                                                                 // also make a zustand setter to submit time, backspace or char, and maybe something else?
+// NEXT: MAKE SURE THESE TWO SUBMITS ARE GETTING CALLED IN THE PROPER CONTEXT (and that they're getting passed everything testSlice needs)
+  const submitBadEcho = useStore((store) => store.testSlice.submitBadEcho); // record userEntry in the store. Called only in the event of a wrong submission. (wrongChar === true) (or wrongLength?) (where a submission is triggered by space (or space2), or by backspace)
+  const submitBadRecall = useStore((store) => store.testSlice.submitBadEcho);
+  /// ////////////////////////////////////
+  // whoah what's going on here??? Where should these be located, in the store?
+  // I'll have to make an echo & recall version for each, real quick.
   const incrementDominoResetKey = useStore(({ testSlice }) => testSlice.incrementDominoResetKey);
   const setHasReceivedCorrectSubmission = useStore(({ testSlice }) => testSlice.setHasReceivedCorrectSubmission);
 

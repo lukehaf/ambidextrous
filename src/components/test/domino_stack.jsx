@@ -22,8 +22,13 @@ const DominoStack = () => {
     return <div>Loading...</div>; // Render a loading state
   }
 
+  ///////////////////////////////////////////////////////
+  // A domino's reset key needs to go here, rather than inside the domino.
+  // ok, the dominoStack needs to listen for an object containing all the keys. Then each domino uses its pairIndex and leftOrRightHalf to subset for its key.
+
   return (
-    <div className={styles.dominoStack}>
+    <div key={} // reset key for the whole DominoStack, for when "lap" changes. (since each domino's targetString & userEntry needs to get reinitialized/wiped clean.)
+    className={styles.dominoStack}>
       {Array.from({ length: dominoStackHeight }).map((_, pairIndex) => ( // usually, dominoes get their pairIndex from the store. However, the dominoStack generates its dominoes' pairIndices from the map function, which then correspond with pairIndices in the store.
         <div key={pairIndex} className={styles.dominoPair}>
           <TestInput
