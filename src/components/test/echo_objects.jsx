@@ -14,11 +14,11 @@ const ProgressBar = (props) => { // props.duration, passed by Echo component
 };
 
 const EchoObjects = () => {
-  const resetKey = useStore((state) => state.testSlice.currentScreen.echoPointer.resetKey);
+  const dominoResetKey = useStore((state) => state.testSlice.currentScreen.echoPointer.dominoResetKey);
   const story = useStore((state) => state.testSlice.currentScreen.echoPointer.story);
   const storyTime = useStore((state) => state.testSlice.currentScreen.echoPointer.storyTime);
   return (
-    <div key={resetKey}>
+    <div key={dominoResetKey}>
       <p>${story}</p>
       <ProgressBar duration={storyTime} />
       {/* Delay EchoNames's appearance until once the progressbar finishes. */}

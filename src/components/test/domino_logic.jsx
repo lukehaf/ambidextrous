@@ -2,21 +2,15 @@
 
 import useStore from '../../store/index.js'; // Zustand store
 
-export const initializeRemainderString = (dominoPointer, props) => {
+export const initializeRemainderString = (dominoPointer) => {
   // dominoPointer subsets `presentables` & `results` & contains display state.
   // // // keys for subsetting:
   const namesOrObjects = dominoPointer.namesOrObjects;
   const listHalf = dominoPointer.listHalf;
-  let pairIndex = dominoPointer.pairIndex; // (overwritten by props.pairIndex, if that's defined)
+  const pairIndex = dominoPointer.pairIndex; // (overwritten by props.pairIndex, if that's defined)
   // // // keys for display-type:
   const echoOrRecall = dominoPointer.echoOrRecall; // (determines whether the domino grabs 2 words or just 1.)
-
-  // props also subsets & contains display state. Only exists for the dominoes which reside in a dominoStack.
-  // props.leftOrRightHalf: dominoStack dominoes get just half of a word-pair.
-  // props.pairIndex:
-  if (props) { // if props.pairIndex exists, overwrite the pairIndex from dominoPointer (which should be null in the cases involving a dominoStack, anyways)
-    pairIndex = props.pairIndex;
-  }
+  const leftOrRight = dominoPointer.leftOrRight; // (determines which word, if just 1.) (null in the case of 2 words (ie, an echo domino))
 
   // hook the correct pair from the Zustand store
   const targetPair = useStore((state) => state.testSlice.presentables.targetPairs[namesOrObjects][listHalf][pairIndex]); // targetPair also includes a storyText and a storyTime, if it's for an objects-list. Unused, here.
@@ -29,8 +23,7 @@ export const initializeRemainderString = (dominoPointer, props) => {
 
   if (echoOrRecall === 'recall') {
     // Use the specified half (leftHalf or rightHalf)
-    const selectedHalf = targetPair[props.leftOrRightHalf];
-    return stringToCharObjects(selectedHalf);
+    return stringToCharObjects(targetPair[leftOrRight]);
   }
 
   // helper function: converts a string into an array of character-objects. Declare it with function (rather than const) so that it gets hoisted.
@@ -51,15 +44,19 @@ export const handleKeyDown = (e, // "e" is the event.
   { wrongChar, // wrongChar === false means no typing-mistakes have been made. (Typing-mistakes include both wrong characters & exceeding the length of the targetString).
     targetLength, // correct submissions have to be targetLength long. // targetLength initializes off the first remainderString render & is ready for the 2nd render.
     firstSpace }, // firstSpace becomes true in order to track whether they've pressed the spacebar a first time yet
+  echoOrRecall, // to where should the submissions go?
 ) => {
-// NEXT: MAKE SURE THESE TWO SUBMITS ARE GETTING CALLED IN THE PROPER CONTEXT (and that they're getting passed everything testSlice needs)
-  const submitBadEcho = useStore((store) => store.testSlice.submitBadEcho); // record userEntry in the store. Called only in the event of a wrong submission. (wrongChar === true) (or wrongLength?) (where a submission is triggered by space (or space2), or by backspace)
-  const submitBadRecall = useStore((store) => store.testSlice.submitBadEcho);
-  /// ////////////////////////////////////
-  // whoah what's going on here??? Where should these be located, in the store?
-  // I'll have to make an echo & recall version for each, real quick.
-  const incrementDominoResetKey = useStore(({ testSlice }) => testSlice.incrementDominoResetKey);
-  const setHasReceivedCorrectSubmission = useStore(({ testSlice }) => testSlice.setHasReceivedCorrectSubmission);
+  // 3 setters (which act on testSlice.results).
+  // Subset & call like so: submitBad[echoOrRecall](wrongEntry)
+  const submitBad = useStore((state) => (state.testSlice.submitBad));
+  const setCorrect = useStore((state) => (state.testSlice.setCorrect)); // to document a correct submission, which triggers the nextScreen setter
+  const updateDominoResetKey = useStore((state) => (state.testSlice.updateDominoResetKey)); // subset and call like so: updateResetKey[echoOrRecall]()
+
+  /////////////////////////////////////////////////////////////////////////////
+  // above's complete! Now go to test_slice and finish making the 3 setter-objects.
+
+  // obsolete: const incrementDominoResetKey = useStore((state) => state.testSlice.incrementDominoResetKey);
+  // obsolete: const setHasReceivedCorrectSubmission = useStore((state) => state.testSlice.setHasReceivedCorrectSubmission);
 
   // Prevent newlines and tabbing; prevent arrow keys from moving the caret
   if (e.key === 'Enter' || e.key === 'Tab' || e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {

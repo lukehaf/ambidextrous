@@ -16,9 +16,9 @@ const ProgressBar = () => {
 };
 
 const EchoNames = () => {
-  const resetKey = useStore((state) => state.testSlice.currentScreen.echoPointer.resetKey);
+  const dominoResetKey = useStore((state) => state.testSlice.currentScreen.echoPointer.dominoResetKey);
   return (
-    <div key={resetKey}>
+    <div key={dominoResetKey}>
       <Domino />
       <ProgressBar />
     </div>

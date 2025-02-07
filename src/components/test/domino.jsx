@@ -3,13 +3,11 @@ import useStore from '../../store/index.js'; // Zustand store
 import { initializeRemainderString, handleKeyDown } from './domino_logic.jsx';
 
 function Domino(props) {
-  const dominoPointer = useStore((state) => state.testSlice.currentScreen.dominoPointer); // dominoPointer subsets `presentables` & `results`, & contains display state. `Props` is auxiliary, and is passed into dominoes which reside in a dominoStack.
-  const dominoPointer = useStore((state) => state.testSlice.currentScreen[props.echoOrRecall].dominoPointer); // no, it has to conditionally use props.echoOrRecall; they have diff structures.
-
-
+  // dominoPointer subsets `presentables` & `results`, & contains display state. // hook the correct dominoPointer: if props exist, this domino's a recall-domino, and subset for the correct one. Else, hook the echo_dominoPointer.
+  const dominoPointer = useStore((state) => props ? state.testSlice.currentScreen.recall_dominoPointers[props.pairIndex][props.leftOrRight] : state.testSlice.currentScreen.echo_dominoPointer);
 
   // useState() is a react hook for managing state locally (within the component). Helps unclutter the Zustand store.
-  const [remainderString, setRemainderString] = useState(initializeRemainderString(dominoPointer, props)); // remainderString is what users have left to type. It's an array of single-character-objects which get mapped into single-char <span> elements.
+  const [remainderString, setRemainderString] = useState(initializeRemainderString(dominoPointer)); // remainderString is what users have left to type. It's an array of single-character-objects which get mapped into single-char <span> elements.
   const [userEntry, setUserEntry] = useState([]); // initialize userEntry with an empty array; they haven't typed anything yet.
 
   // Changing a ref does not trigger a re-render. This means refs are perfect for storing information that doesn’t affect the visual output of your component.
@@ -23,7 +21,7 @@ function Domino(props) {
   //                               // wrongChar is actually used both inside handleKeyDown & in Domino (to conditionally render a space).
 
   // handleKeyDown: modify remainderString & userEntry; handle backspace & space (for reset & submit behaviors).
-  const boundHandleKeyDown = (e) => handleKeyDown(e, { remainderString, setRemainderString, userEntry, setUserEntry }, { targetLength, firstSpace, wrongChar }); // this boundHandleKeyDown wrapper cleans up the JSX (by keeping all these arguments out of it)
+  const boundHandleKeyDown = (e) => handleKeyDown(e, { remainderString, setRemainderString, userEntry, setUserEntry }, { targetLength, firstSpace, wrongChar }, dominoPointer.echoOrRecall); // this boundHandleKeyDown wrapper cleans up the JSX (by keeping all these arguments out of it)
 
   // NEXT, CONTINUE CHECKING THAT ALL THE HANDLEKEYDOWN LOGIC WORKS, NOW THAT IT'S SILOED AWAY IN DOMINO_LOGIC.
   //////////////////////////////////////////////////////////
