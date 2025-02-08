@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import useStore from '../../store/index.js'; // Zustand store
-import { initializeRemainderString, handleKeyDown } from './domino_logic.jsx';
+import { initializeRemainderString, handleKeyDown, useDominoFocus, useCaretAtEnd } from './domino_logic.jsx';
 
 function Domino(props) {
   // dominoPointer subsets `presentables` & `results`, & contains display state. // hook the correct dominoPointer: if props exist, this domino's a recall-domino, and subset for the correct one. Else, hook the echo_dominoPointer.
@@ -21,56 +21,23 @@ function Domino(props) {
   //                               // wrongChar is actually used both inside handleKeyDown & in Domino (to conditionally render a space).
 
   // handleKeyDown: modify remainderString & userEntry; handle backspace & space (for reset & submit behaviors).
-  const boundHandleKeyDown = (e) => handleKeyDown(e, { remainderString, setRemainderString, userEntry, setUserEntry }, { targetLength, firstSpace, wrongChar }, dominoPointer.echoOrRecall); // this boundHandleKeyDown wrapper cleans up the JSX (by keeping all these arguments out of it)
+  // Outside handleKeyDown, though, first hook 3 additional Zustand setters (needed by handleKeyDown). (Hook best-practices: pass the RESULTS from hooks (such as a setter). Don't ever call hooks (eg useStore()) INSIDE a helper function. Only call them inside the react component itself, or inside a custom hook which is itself inside the react component.)
+  const { submitBad, setCorrect, updateDominoResetKey } = useStore((state) => ({ submitBad: state.testSlice.submitBad, setCorrect: state.testSlice.setCorrect, updateDominoResetKey: state.testSlice.updateDominoResetKey }));
+  const boundHandleKeyDown = (e) => handleKeyDown(e, { remainderString, setRemainderString, userEntry, setUserEntry }, { targetLength, firstSpace, wrongChar }, dominoPointer.echoOrRecall, { submitBad, setCorrect, updateDominoResetKey }); // this boundHandleKeyDown wrapper cleans up the JSX (by keeping all these arguments out of it)
 
-  // NEXT, CONTINUE CHECKING THAT ALL THE HANDLEKEYDOWN LOGIC WORKS, NOW THAT IT'S SILOED AWAY IN DOMINO_LOGIC.
-  //////////////////////////////////////////////////////////
-  // THEN, SEE IF I CAN TURN PLACECARETATEND INTO A FUNCTION, AND SIMILARLY SILO IT AWAY.
-  const dominoRef = useRef(null); // WHAT'S THIS FOR? focus and placing caret.
-  ///////////////////////////////////
+  // for focus & for placing caret. // begins null; points to the DOM object once it exists
+  const dominoRef = useRef(null);
 
-  useEffect(() => {
-    // Automatically focus the domino div on mount
-    if (dominoRef.current) {
-      dominoRef.current.focus();
-    }
-  }, []);
+  // a custom hook I made, for handling focus
+  useDominoFocus(dominoRef,
+    dominoPointer.echoOrRecall, // echo has one domino, which auto-focuses.
+    dominoPointer.focused, // recall has multiple dominoes, only one of which has focused === true. (focused === null or undefined for echo.)
+  );
 
-  // Automatically place caret at the end of the userEntry string (on mount and when userEntry changes).
-  useEffect(() => {
-    if (dominoRef.current) {
-      placeCaretAtEnd(dominoRef.current);
-    }
-  }, [userEntry]); // Dependency-- listen for when userEntry changes
+  // Another custom hook: automatically place caret at the end of the userEntry string (on mount and when userEntry changes). (It's a hook bc it also contains useEffect(), listening for userEntry as a dependency.)
+  useCaretAtEnd(dominoRef, userEntry);
 
-  // Function for keeping caret at end of userEntry string, as they type
-  const placeCaretAtEnd = (dominoElement) => {
-    if (!dominoElement) return;
-
-    // To control the caret position programmatically, you interact with both the Selection and Range APIs.
-    // The <Domino /> is available here as a "document"; each document has a unique "selection" state-object, which handles
-    // where the caret's displayed & what's highlighted. To programmatically specify a selection, first you create a range, and then pass that to the selection.
-    const range = document.createRange();
-    const selection = window.getSelection();
-
-    // Create a Range:
-    // Identify the text node or element where the caret should go.
-    // Use the Range API to set the exact start and end of the range (both at the same point for a collapsed caret (= nothing's highlighted/selected)).
-    const firstChild = dominoElement.children[0]; // children includes only element nodes, ignoring text and comment nodes. The 0th child is thus the span containing all the userEntry char spans.
-
-    if (firstChild) {
-      const offset = firstChild.childNodes.length; // the offset is the number of single-char spans within the userEntry span, so the offset grows as the user types.
-      range.setStart(firstChild, offset);
-    }
-    range.collapse(true); // Collapse to a single point (caret placement)
-
-    // Update the Selection:
-    // Get the current Selection object using window.getSelection(), and then clear any existing selections and apply the new range.
-    selection.removeAllRanges();
-    selection.addRange(range);
-  };
-
-  // show remainderString in grey, to the right of the userEntry.
+  // return a contentEditable, containing: (remainderString in grey) to the right of (userEntry in black, occasionally red-highlighted).
   return (
     <div
       ref={dominoRef} // so useEffect can auto-focus this div on mount
@@ -134,6 +101,7 @@ function Domino(props) {
 
 export default Domino;
 
+////////////////////////////////////////////////////////////////////
 // // The scrollToEnd function ensures the container scrolls to the latest character as the user types.
 
 // import React, { useRef, useState } from 'react';
@@ -151,12 +119,3 @@ export default Domino;
 //   <div
 //     ref={containerRef}
 ////////////////////////////////////////////////////////////////////
-
-// Here's some timer logic
-
-// const [startTime, setStartTime] = useState(null); // useState(<initialize the state here>) is a react hook for managing local state, without cluttering the zustand store.
-
-// // Set startTime when component first renders
-// useEffect(() => {
-//   setStartTime(Date.now());
-// }, []); // Empty dependency array means it runs only once, on mount
