@@ -40,10 +40,10 @@ function Domino(props) {
   // return a contentEditable, containing: (remainderString in grey) to the right of (userEntry in black, occasionally red-highlighted).
   return (
     <div
-      ref={dominoRef} // so useEffect can auto-focus this div on mount
-      contentEditable={true} // Disables cursor placement by clicking. Enter & Tab are disabled. Only typing and backspace are supported.
-      suppressContentEditableWarning={true} // React isn't designed to manage contentEditable elements safely, and gives a warning. Don't disable this warning unless you're confident you're manually handling all updates to the DOM in the contentEditable area (including user input), & disabling the contentEditable div's desire to display its own stuff, & explicitly only showing letters which are from the react state.
+      ref={dominoRef} // so useDominoFocus can programmatically focus this div
       tabIndex={0} // Make div programmatically focusable
+      contentEditable={true}
+      suppressContentEditableWarning={true} // React isn't designed to manage contentEditable elements safely, and gives a warning. Don't disable this warning unless you're confident you're manually handling all updates to the DOM in the contentEditable area (including user input), & disabling the contentEditable div's desire to display its own stuff, & explicitly only showing letters which are from the react state.
       onKeyDown={boundHandleKeyDown}
       onMouseDown={(e) => e.preventDefault()} // Prevents cursor placement via mouse clicks
       style={{

@@ -153,8 +153,7 @@ export default function createTestSlice(set, get) {
         }, false, 'updateStoryAndTime'),
         // CALL WHENEVER THE DOMINOPAIR CHANGES, if it's an object-pair that's getting shown next. otherwise have storyText and storyTime be null
       },
-      echo_dominoPointer: { // listened to by the Domino component (that renders inside an Echo component).
-        // echo_DominoPointer subsets `presentables` & `results` & contains display state.
+      echo_dominoPointer: { // listened to by the Domino component (that renders inside an Echo component). // echo_DominoPointer subsets `presentables` & `results` & contains display state.
         // keys for subsetting:
         namesOrObjects: 'objects',
         listHalf: 'one',
@@ -164,8 +163,6 @@ export default function createTestSlice(set, get) {
         attempt: 0, // used by newDominoResetKey. Unnecessary for submissions; they just append. // wrongSubmissions.length()
         // keys for display-type & submission-logic:
         echoOrRecall: 'echo', // (2vs1 space logic depends on this, and whether the domino grabs 2 words or just 1.) // the domino will also get passed an echo prop by its parent, so it knows to listen to the echo.dominoPointer object. But also have the echo key inside the echo.dominoPointer, so only dominoPointer gets passed into the domino, instead of also passing in an auxilliary prop object.
-        // obsolete keys:
-        // //   scrambledPairIndex: // no need for an additional scrambledPairIndex anymore, for echo_objects. pairIndex points to a location in presentables and results, independent from the order in which the 5 echo_objects screens are presented.
       },
 
       recallPointer: {
@@ -194,15 +191,8 @@ export default function createTestSlice(set, get) {
         echoOrRecall: 'echo', // (also a prop) // (2vs1 space logic depends on this, and whether the domino grabs 2 words or just 1.) // echoOrRecall is also a prop; duplicate it here, though.
         leftOrRight: 'leftHalf', // (also a prop) (for display-type & submission-logic) (controls whether the grey text is shown, and whether they get unlimited tries.)
         focused: false, // Listened to by dominoes that know they're part of a dominoStack. // I NEED TO INITIALIZE WHICH DOMINO STARTS OUT FOCUSED. deal with that when I make the setFocus.
-        // there only need to be 5 of the following. (also concern display-type)
         reinforcementNeeded: null, // listened to by domino-pairs that know they're part of a dominoStack. // for IDK-button submissions or incorrect rightHalf followed by a correct rightHalf.
         rightHalfGrey: false, // (for when the rightHalf needs to show grey, and behave like a leftHalf, IF they've clicked the IDK button or correctly submitted the rightHalf following an incorrect submission of rightHalf.)
-
-        // obsolete keys:
-        // //   whichAttempt: 0, // this prop's no longer needed. It was going to be for moving them on after 1 attempt on recall (rightHalf).
-        // //   scrambledPairIndex: // no need for an additional scrambledPairIndex anymore, for echo_objects. pairIndex points to a location in presentables and results, independent from the order in which the 5 echo_objects screens are presented.
-        // //   rep: 0, // used as a reset-key for the echos. (Domino-stack gets one rep per domino; no need for a reset.)
-
       },
     },
     presentables: {
@@ -250,7 +240,6 @@ export default function createTestSlice(set, get) {
     goToEchoNames: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'EchoNames'; }, false, 'goToEchoNames'), // couldn't I have just one function for all this? and pass the screen name? & then somehow get that out into the devtools middleware?
     goToEchoObjects: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'EchoObjects'; }, false, 'goToEchoObjects'),
     goToRecall: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'Recall'; }, false, 'goToRecall'),
-    goToDominoStack: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'DominoStack'; }, false, 'goToDominoStack'),
 
     // we also need a counterBalanced object: an array of strings, dictating the order, say Names1 Names2 Objects1 Objects2. That lets the store be set up in the same order each time, and handles some conditional render type thing about what ([namesOrObjects][1vs2] gets passed to recall, echo_names, and echo_objects)?
   };
