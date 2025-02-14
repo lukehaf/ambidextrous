@@ -31,11 +31,15 @@ function Domino(props) {
   // a custom hook I made, for handling focus
   useDominoFocus(dominoRef,
     dominoPointer.echoOrRecall, // echo has one domino, which auto-focuses.
-    dominoPointer.focused, // recall has multiple dominoes, only one of which has focused === true. (focused === null or undefined for echo.)
+    dominoPointer.focused, // recall has multiple dominoes, only one of which has focused === true. (focused === undefined for echo; the key doesn't exist for echo.)
   );
 
   // Another custom hook: automatically place caret at the end of the userEntry string (on mount and when userEntry changes). (It's a hook bc it also contains useEffect(), listening for userEntry as a dependency.)
   useCaretAtEnd(dominoRef, userEntry);
+
+  // Conditionally hide the grey remainderString & linting (for recall dominoes, if their leftOrRight === 'rightHalf' && thisPairIsReinforcement === false). (&& returns a boolean.) Echo dominoes don't have either of those keys, so they'll return values of 'undefined', which makes the && return false. Good.
+  // hideGreyRed's a local variable. It'll be created anew each render cycle, derived from values in dominoPointer. That's fine.
+  const hideGreyRed = (dominoPointer.leftOrRight === 'rightHalf' && dominoPointer.thisPairIsReinforcement === false);
 
   // return a contentEditable, containing: (remainderString in grey) to the right of (userEntry in black, occasionally red-highlighted).
   return (
@@ -60,13 +64,13 @@ function Domino(props) {
         cursor: 'text',
       }}
     >
-      {/* Next block is the userEntry string. Put it all in a span, so the cursor knows to always be on the first span. */}
+      {/* Next block is the userEntry string. Put it all in a span, because the cursor-logic involves always being within the first span. */}
       <span>
         {userEntry.map((t, index) => ( // iterate over the array & return a new array (of <span> react elements). // For each element in the array (t), the map function executes the code inside the arrow function (t, index) => ( ... )
           <span
             key={index} // The key prop is required by React when rendering lists to uniquely identify each element. // Additional use (not going on here): incrementing key, so React thinks it's a different key, & rerenders it/resets its state.
             style={{
-              backgroundColor: t.backgroundColor,
+              backgroundColor: hideGreyRed ? undefined : t.backgroundColor, // for rightHalf dominoes (preIDK), don't assign the red linting, even if they typed incorrectly.
               padding: '0px',
               margin: '0 1px',
             }}
@@ -76,25 +80,29 @@ function Domino(props) {
         ))}
       </span>
 
-      {/* if wrongChar === true, forevermore conditionally render a single space span, between the two strings. */}
-      {/* Using &nbsp; ensures a non-breaking space is explicitly rendered. (otherwise a lone space character will get ignored by browsers). Another potential solution: style={{ display: 'inlineBlock' }} for spans means their width doesn't get ignored. */}
-      {wrongChar.current === true && <span>&nbsp;</span>}
+      {/* Next block is the nbsp + remainderString, rendered conditionally. (Hide them if hideGreyRed === true.) */}
+      {!hideGreyRed && (
+        <span>
+          {/* if wrongChar === true, forevermore conditionally render a single space span, between the two strings. */}
+          {/* Using &nbsp; ensures a non-breaking space is explicitly rendered. (otherwise a lone space character will get ignored by browsers). Another potential solution: style={{ display: 'inlineBlock' }} for spans means their width doesn't get ignored. */}
+          {wrongChar.current === true && <span>&nbsp;</span>}
 
-      {/* Next block is the grey remainderString */}
+          {/* Next block is the grey remainderString */}
 
-      {remainderString.map((t, index) => (
-        <span
-          key={index}
-          style={{
-            padding: '0px', // padding grows the element; margin adds space between elements.
-            margin: '0 1px', // 0 pixels vertical margin, 1 pixel horizontal margin
-            color: 'grey',
-          }}
-        >
-          {t.char}
+          {remainderString.map((t, index) => (
+            <span
+              key={index}
+              style={{
+                padding: '0px', // padding grows the element; margin adds space between elements.
+                margin: '0 1px', // 0 pixels vertical margin, 1 pixel horizontal margin
+                color: 'grey',
+              }}
+            >
+              {t.char}
+            </span>
+          ))}
         </span>
-      ))}
-
+      )}
     </div>
   );
 }

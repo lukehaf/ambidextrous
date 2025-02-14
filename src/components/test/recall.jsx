@@ -9,6 +9,7 @@ const Recall = () => {
   const stackResetKey = useStore((state) => state.testSlice.currentScreen.recallPointer.stackResetKey); // reset key for the whole DominoStack, for when "lap" changes. (since each domino's targetString & userEntry needs to get reinitialized/wiped clean.)
   const dominoResetKeys = useStore((state) => state.testSlice.currentScreen.recallPointer.dominoResetKeys);
   const dominoStackHeight = useStore((state) => state.testSlice.currentScreen.recallPointer.dominoStackHeight);
+  const setCorrect = useStore((state) => state.testSlice.setCorrect);
 
   // const [isReady, setIsReady] = useState(false); // Local state to track readiness. useState is NOT synchronous; it waits for the next render cycle.
   // // on mount, initialize this part of the store:
@@ -40,9 +41,12 @@ const Recall = () => {
             pairIndex={pairIndex}
             leftOrRightHalf="rightHalf"
           />
+          <button onClick={setCorrect.recall('IDK')} // IDK button is there, always. (extra points for a css that makes it fade in.)
+          >IDK
+          </button>
+          {/* Placeholder for progressbar */}
         </div>
       ))}
-      {/* Placeholder for progressbar */}
     </div>
   );
 };
