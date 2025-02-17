@@ -1,13 +1,10 @@
 // test_slice.js
+import { HARD, incrementKeys, derivedKeys } from './test_logic';
 
-// testSlice consists of 3 datastructures: presentables (for all screens), results (from all screens), and currentScreen (so the currently-rendered screen knows which part of presentables to draw from, and which part of results to write to).
-// eventually I could make these 3 datastructures into 3 different slices, I bet. But no need. // results has a group of setters, beneath it. Maybe the other 2 datastructures will too.
+// testSlice consists of 3 datastructures: results (from all screens), presentables (for all screens), and currentScreen (so the currently-rendered screen knows which part of presentables to draw from, and which part of results to write to). // eventually I could make these 3 datastructures into 3 different slices, I bet. But no need.
+// Beneath the 3 datastructures, testSlice also contains 3 setters: setCorrect, submitBad, and nextScreen.
 
 // First though, here's a function for initializing the results datastructure. It creates an echo-results-object and a recall-results object, and gets called 4 times. First 2 times are both for names, and require the `names` parameter. Second 2 times are both for objects, and require the `objects` parameter.
-const HARD = { // the function requires some hardcoded lengths
-  names: { lapsEcho: 2, repsEcho: 2, lapsRecall: 3, dominoHeight: 5 }, // For createQuarterResults(names). also used by currentScreen and updateScreen()
-  objects: { lapsEcho: 1, repsEcho: 1, lapsRecall: 3, dominoHeight: 5 }, // For createQuarterResults(objects). also used by currentScreen and updateScreen()
-  nthParticipant: null };
 function createQuarterResults({ lapsEcho, repsEcho, lapsRecall, dominoHeight }) {
   return {
     // results of the echo-practice (from the perspective of calling this function for the 1st listHalf of names):
@@ -37,295 +34,51 @@ function createQuarterResults({ lapsEcho, repsEcho, lapsRecall, dominoHeight }) 
   };
 }
 
-// This non-set()-wrapped function mutates the incrementable keys in (draftState..echo_dominoPointer) or (draftState..recallPointer & draftState..recall_dominoPointers).
-// It's called synchronously as the penultimate line of setCorrect (once the prior lines have slaked their need for currentScreen.<dominoPointer>'s unmodified base state). Synchronousness (making updateScreen a helper function within a setter, rather than in independent setter) matters since Zustand doesn't guarantee the order of execution for two setters called during the same render cycle of a React component.
-// Afterwards, derivedKeys() is called (as the final line of setCorrect) to fill out the rest, based on the incremented keys. Since both are called by setCorrect we know the submission was correct; no need to worry about incrementing/resetting attempt. That's not even in the dominoPointer.
-const incrementKeys = {
-  // incrementKeys has 3 versions, each with a different increment-logic. (I created a separate version for each context; otherwise I'd have to intermix between-context if statements with within-context if statements, which I find confusing.)
-  echo: { // The .echos only increment ..echo_dominoPointer
-    names: (draftState) => { // In javascript, objects are passed by reference; that's how I'm certain that incrementKeys is mutating the setter's draftState, rather than an independent copy (while leaving the setter's draftState untouched (that's what the spread operator's for: creating a copy of the object.)). The setter's draftState is what needs to be mutated, so immer can polish the draft into a full-fledged new state, which can be passed to Zustand and committed/made unmutable.
-      const echo_dominoPointer = draftState.testSlice.currentScreen.echo_dominoPointer; // similarly, currentScreen is an object, so the = passes a reference (rather than the object itself). So, mutating currentScreen affects the original object. (This would not work for primitives (e.g., a number, string, or boolean), since those are passed by value (creating an independent copy).)
-      const ptr = echo_dominoPointer; // for brevity
-
-      // increment (nestedly) rep, pairIndex, and lap
-      if (ptr.rep++ < HARD.names.repsEcho) return; // this is called an "early return pattern", where () true triggers the return. The remaining lines are the else block.
-      ptr.rep = 0; // say repsEcho is 2, and (0-indexed) ptr.rep is 0. They still need a second rep. So, increment (0-indexed) ptr.rep to 1, and the () evaluates true, and the early return executes. // now say ptr.rep, upon submission of the 1th (second) rep, gets incremented to 2. () evaluates false; no execution of the early return, and the next line executes, resetting ptr.rep.
-
-      if (ptr.pairIndex++ < HARD.names.dominoHeight) return;
-      ptr.pairIndex = 0;
-
-      if (ptr.lap++ < HARD.names.lapsEcho) return;
-
-      // they've completed all their reps, pairs, and laps (for this 8th of the test).
-
-      // reset everything to null, including the derived keys. (probably unnecessary; it just gives InstructionsScreen a nice blank slate for initializing).
-      ptr.lap = null;// null the incrementable keys in echo_dominoPointer
-      ptr.pairIndex = null;
-      ptr.rep = null;
-      ptr.namesOrObjects = null; // null the InstructionsScreen-initialized keys in echo_dominoPointer
-      ptr.listHalf = null;
-      const echoPointer = draftState.testSlice.currentScreen.echoPointer; // null the derived keys in echoPointer
-      echoPointer.dominoResetKey = null;
-      echoPointer.storyText = null;
-      echoPointer.storyTime = null;
-
-      // increment counterbalanced.screenIndex, and use that to update whichScreen (with the name of the next React component to be conditionally rendered)
-      const ctb = draftState.testSlice.currentScreen.counterbalanced;
-      ctb.screenIndex++;
-      draftState.testSlice.currentScreen.whichScreen = ctb.array[ctb.screenIndex];
-
-      return 'complete'; // Indicates that echo_dominoPointer's keys (& the derived keys in echoPointer) were just set to null. (Don't try to set them like usual by calling derivedKeys.)
-    },
-    objects: (draftState) => { // incrementKeys.echo.objects uses scrambled order. (That's the only difference from incrementKeys.echo.names above.)
-      const echo_dominoPointer = draftState.testSlice.currentScreen.echo_dominoPointer;
-      const ptr = echo_dominoPointer;
-      // nested incrementing: rep, pairIndex, lap.
-      if (ptr.rep++ < HARD.objects.repsEcho) return;
-      ptr.rep = 0;
-      switch (ptr.pairIndex % 2) { // increment pairIndex in the 02413 order, just for echo.objects. // I like the 02413 order because you’re not consciously chaining anything until the last moment. It’s just a faith in the process kind of thing.
-        case 0: // covers 0, 2, 4 ... // this switch statement can handle any dominoHeight, odd or even. For instance, dominoHeight = 6 produces 024135.
-          if ((ptr.pairIndex += 2) < HARD.objects.dominoHeight) return;
-          ptr.pairIndex = 1; // now we'll be running through the odd sequence.
-          return; // otherwise lap++ below would execute; that's incorrect; we still have the 3 ... pairIndexes left.
-        case 1: // covers 1, 3 ...
-          if ((ptr.pairIndex += 2) < HARD.objects.dominoHeight) return;
-          ptr.pairIndex = 0; // no break needed, since there are no further cases to fall-through onto
-      }
-      if (ptr.lap++ < HARD.names.lapsEcho) return;
-
-      // reset everything to null; this 8th's complete
-      ptr.lap = null;
-      ptr.pairIndex = null;
-      ptr.rep = null;
-      ptr.namesOrObjects = null;
-      ptr.listHalf = null;
-      const echoPointer = draftState.testSlice.currentScreen.echoPointer;
-      echoPointer.dominoResetKey = null;
-      echoPointer.storyText = null;
-      echoPointer.storyTime = null;
-      // increment counterbalanced.screenIndex and update whichScreen
-      const ctb = draftState.testSlice.currentScreen.counterbalanced;
-      ctb.screenIndex++;
-      draftState.testSlice.currentScreen.whichScreen = ctb.array[ctb.screenIndex];
-      return 'complete';
-    },
-  },
-  recall: (draftState) => { // .recall increments both ..whichFocus and ..recall_dominoPointers (they're complementary).
-    // More specifically: whichFocus gets incremented, lap (for all recall_dominoPointers) can get incremented, and (if lap changes) recallPointer gets new reset keys (don't worry; no arguments are needed to build them).
-    // OR if all laps are complete, currentScreen's time, whichFocus, and attempt are nulled; its counterbalanced & whichScreen are incremented; its recallPointer (comprised of reset keys) is nulled; and its recall_dominoPointers are nulled.
-
-    const { whichFocus } = draftState.testSlice.currentScreen; // this is the stale whichFocus, in need of incrementation
-    const oldDominosLap = draftState.testSlice.currentScreen.recall_dominoPointers[whichFocus.pairIndex][whichFocus.leftOrRight].lap; // to see if lap needs incrementation
-
-    // increment leftOrRight
-    if (whichFocus.leftOrRight === 'leftHalf') {
-      whichFocus.leftOrRight = 'rightHalf';
-    }
-    else if (whichFocus.leftOrRight === 'rightHalf') {
-      whichFocus.leftOrRight = 'leftHalf';
-
-      // increment pairIndex
-      if (whichFocus.pairIndex + 1 < ((HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : null)) {
-        whichFocus.pairIndex++;
-      }
-      else if (whichFocus.pairIndex + 1 >= ((HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : null)) {
-        whichFocus.pairIndex = 0;
-
-        // increment lap, or if they're all out of laps, move on to the next instructions screen.
-        if (oldDominosLap + 1 < ((HARD.names.lapsRecall === HARD.objects.lapsRecall) ? HARD.names.lapsRecall : null)) { // A NEW LAP IS BEGUN. increment lap for all recall_dominoPointers, reset all recallPointer.dominoResetKeys, and increment recallPointer.stackResetKey
-        // Increment lap in all the recall_dominoPointers (they need it for their submission-logic)
-          const { recall_dominoPointers } = draftState.testSlice.currentScreen;
-          recall_dominoPointers.forEach(pairIndex => { // .forEach operates upon arrays
-            ['leftHalf', 'rightHalf'].forEach(leftOrRight => {
-              recall_dominoPointers[pairIndex][leftOrRight].lap++;
-            });
-          });
-
-          // Reset all recallPointer.dominoResetKeys; they don't contain lap, so they have to restart at attempt 0 for each lap.
-          const { dominoResetKeys } = draftState.testSlice.currentScreen.recallPointer;
-          dominoResetKeys.forEach(pairIndex => {
-            ['leftHalf', 'rightHalf'].forEach(leftOrRight => {
-              dominoResetKeys[pairIndex][leftOrRight] = `leftOrRight:${leftOrRight}-attempt:0-thisPairNeedsReinforcement:false`;
-            });
-          });
-
-          // Increment recallPointer.stackResetKey
-          draftState.testSlice.currentScreen.recallPointer.stackResetKey++; // it's an integer. Always has same value as lap. Initialized to 0 for each 8th of the test.
-        }
-        else if (oldDominosLap + 1 >= ((HARD.names.lapsRecall === HARD.objects.lapsRecall) ? HARD.names.lapsRecall : null)) { // ALL LAPS ARE COMPLETE. // currentScreen's time, whichFocus, and attempt are nulled; its counterbalanced & whichScreen are incremented; its recallPointer (comprised of reset keys) is nulled; and its recall_dominoPointers are nulled.
-        // Null the time keys; InstructionsScreen reinitializes them.
-          draftState.testSlice.currentScreen.time.atPairFocus = null;
-          draftState.testSlice.currentScreen.time.atLastSubmission = null;
-
-          // Null the (incrementable) whichFocus keys; InstructionsScreen reinitializes them.
-          draftState.testSlice.currentScreen.whichFocus.pairIndex = null;
-          draftState.testSlice.currentScreen.whichFocus.leftOrRight = null;
-
-          // Null the attempt key; InstructionsScreen reinitializes it.
-          draftState.testSlice.currentScreen.attempt = null;
-
-          // increment counterbalanced.screenIndex and update whichScreen
-          const ctb = draftState.testSlice.currentScreen.counterbalanced;
-          ctb.screenIndex++;
-          draftState.testSlice.currentScreen.whichScreen = ctb.array[ctb.screenIndex];
-
-          // Null the reset keys. All are reinitialized by InstructionsScreen.
-          const { recallPointer } = draftState.testSlice.currentScreen;
-          draftState.testSlice.currentScreen.recallPointer.stackResetKey = null;
-          recallPointer.dominoResetKeys.forEach(pairIndex => {
-            ['leftHalf', 'rightHalf'].forEach(leftOrRight => {
-              recallPointer.dominoResetKeys[pairIndex][leftOrRight] = null;
-            });
-          });
-
-          // Null lap, listHalf, namesOrObjects, focused, and thisPairNeedsReinforcement in all the recall_dominoPointers. Lap is the incrementable one; all 5 are initialized by InstructionsScreen.
-          const { recall_dominoPointers } = draftState.testSlice.currentScreen;
-          recall_dominoPointers.forEach(pairIndex => { // .forEach operates upon arrays
-            ['leftHalf', 'rightHalf'].forEach(leftOrRight => {
-              recall_dominoPointers[pairIndex][leftOrRight].lap = null;
-              recall_dominoPointers[pairIndex][leftOrRight].listHalf = null;
-              recall_dominoPointers[pairIndex][leftOrRight].namesOrObjects = null;
-              recall_dominoPointers[pairIndex][leftOrRight].focused = null;
-              recall_dominoPointers[pairIndex][leftOrRight].thisPairNeedsReinforcement = null;
-            });
-          });
-
-          return 'complete';
-        };
-      }
-    }
-  },
-};
-
-const derivedKeys = { // update all keys, in the order they occur in currentScreen
-  echo: ({ init }, draftState) => { // two versions: First version (init) is called by InstructionsScreen. Second is called in setCorrect, to prepare the next domino.
-    // get refs to all the currentScreen objects we'll be updating
-    const { time, whichFocus, echoPointer, echo_dominoPointer } = draftState.testSlice.currentScreen;
-
-    // initialize time, for this domino
-    time.atLastSubmission = Date.now();
-    time.atPairFocus = Date.now();
-
-    // whichFocus is not used by echo; initialize it to null
-    whichFocus.pairIndex = null;
-    whichFocus.leftOrRight = null;
-    // attempt was already reset to 0
-    // counterbalanced & whichScreen do not need incrementing
-
-    // echo_dominoPointer
-    if (init) {
-      const { namesOrObjects, listHalf } = draftState.testSlice.currentScreen.counterbalanced;
-      echo_dominoPointer.namesOrObjects = namesOrObjects;
-      echo_dominoPointer.listHalf = listHalf;
-      echo_dominoPointer.lap = 0;
-      echo_dominoPointer.pairIndex = 0;
-      echo_dominoPointer.rep = 0;
-    };
-    // echo_dominoPointer, !init: the incrementable keys were already incremented, by incrementKeys.echo. Actually, they're ALL just incrementable keys, and are already handled.
-    // // namesOrObjects: null, // initialized by InstructionsScreen
-    // // listHalf: null, // initialized by InstructionsScreen
-    // // lap: null, same
-    // // pairIndex: null, same
-    // // rep: null, same
-
-    // now get their updated versions (to use in the echoPointer.dominoResetKey and for subsetting)
-    const { namesOrObjects, listHalf, lap, pairIndex, rep } = echo_dominoPointer;
-
-    // echoPointer
-    echoPointer.dominoResetKey = `lap:${lap}-pairIndex:${pairIndex}-rep:${rep}-attempt:0`; // Just reset for lap, pairIndex, rep, attempt. // It's nulled after each 8th of the test, so no need to worry about namesOrObjects, listHalf, or echoOrRecall.
-    // echoPointer: get storyText and storyTime, to put in echoPointer. For names, these are undefined, and undefined is assigned as the value for echoPointer.storyText & .storyTime.
-    const targetPair = draftState.testSlice.presentables.targetPairs[namesOrObjects][listHalf][pairIndex]; // the correct answer, from presentables
-    echoPointer.storyText = targetPair.storyText;
-    echoPointer.storyTime = targetPair.storyTime;
-
-    // results
-    // Go put the correct answer (from above step) in resultsPair.
-    const resultsPair = draftState.testSlice.results[namesOrObjects][listHalf].echo[lap][pairIndex][rep]; // the submission location, in results
-    resultsPair.targetPair.leftHalf = targetPair.leftHalf;
-    resultsPair.targetPair.rightHalf = targetPair.rightHalf;
-  },
-  recall: ( // update all keys, in the order they occur in currentScreen
-    { init, IDK }, // 3 versions: First version (init) is called by InstructionsScreen. Second and third versions (IDK and correct (the default; empty object)) are called in setCorrect, to prepare the next domino.
-    draftState, // draftState.testSlice.currentScreen is what they all operate upon.
-    whichFocus, // whichFocus has been incremented (or initialized) already; it's for the new domino.
-  ) => {
-    // get refs to all the currentScreen objects we'll be updating
-    const { time, recallPointer, recall_dominoPointers } = draftState.testSlice.currentScreen;
-
-    // initialize time, for this domino
-    time.atLastSubmission = Date.now();
-    if (whichFocus.leftOrRight === 'leftHalf') {
-      time.atPairFocus = Date.now(); // time.atPairFocus only gets initialized by a leftHalf domino. (also handles IDK case; whenever IDK is clicked, the new domino is ALWAYS the leftHalf of the pair)
-    }
-
-    // whichFocus has already been updated
-    // attempt was already reset to 0
-    // counterbalanced & whichScreen do not need incrementing
-    // recallPointer's reset keys have already been incremented (for IDK and correct)
-    // // (for init, initialize all of recallPointer's reset keys:)
-    if (init) {
-      recallPointer.stackResetKey = 0; // it's an integer. Always has same value as lap. Initialized to 0 for each 8th of the test.
-      recallPointer.dominoResetKeys.forEach(pairIndex => {
-        ['leftHalf', 'rightHalf'].forEach(leftOrRight => {
-          recallPointer.dominoResetKeys[pairIndex][leftOrRight] = `leftOrRight:${leftOrRight}-attempt:0-thisPairNeedsReinforcement:false`; // they don't contain lap, so they have to restart at attempt 0 for each lap.
-        });
-      });
-    };
-
-    // recall_dominoPointers
-    if (init) {
-      recall_dominoPointers.forEach(pairIndex => {
-        ['leftHalf', 'rightHalf'].forEach(leftOrRight => {
-          const { namesOrObjects, listHalf } = draftState.testSlice.currentScreen.counterbalanced;
-          const ptr = recall_dominoPointers[pairIndex][leftOrRight];
-          ptr.namesOrObjects = namesOrObjects;
-          ptr.listHalf = listHalf;
-          ptr.lap = 0;
-          ptr.focused = false;
-          ptr.thisPairNeedsReinforcement = false;
-        });
-      });
-    };
-    // recall_dominoPointers: subset the new one, using the new whichFocus
-    const newDomino = recall_dominoPointers[whichFocus.pairIndex][whichFocus.leftOrRight];
-    // namesOrObjects: // initialized by InstructionsScreen
-    // listHalf: // initialized by InstructionsScreen
-    // lap: // handled by IncrementKeys
-    // pairIndex, // dynamically assigned by Array.from()
-    // leftOrRight: key, // dynamically assigned by map
-    newDomino.focused = true;
-    // thisPairNeedsReinforcement: changed to false, for that domino in the pair, upon a correct (nonIDK) submission. For an IDK submission (rightHalf), incrementKeys sets it true in the old domino (the rightHalf), and derivedKeys sets it true in the new domino (the leftHalf).
-    if (IDK) {
-      newDomino.thisPairNeedsReinforcement = true;
-    };
-
-    // currentScreen's done.
-    if (!init) {
-      const targetPair = draftState.testSlice.presentables.targetPairs[newDomino.namesOrObjects][newDomino.listHalf][newDomino.pairIndex]; // the correct answer, from presentables
-      const resultsPair = draftState.testSlice.results[newDomino.namesOrObjects][newDomino.listHalf].recall[newDomino.lap][newDomino.pairIndex]; // the submission location, in results
-
-      if (IDK) { // Initialize the deeper results structure that this leftHalf and its rightHalf will submit to. (There was just an IDK click in rightHalf, which means it's the perfect time to initialize the deeper results structure.)
-        resultsPair.reinforcement = {
-          targetPair, // the correct answer, just to have it conveniently on hand // (for objects, the targetPair also contains storyTime and storyText.)
-          dominoPairTime: null,
-          leftHalf: { completed: false, wrongSubmissions: [] },
-          rightHalf: { completed: false, wrongSubmissions: [] },
-        };
-      }
-      else { // !init && !IDK means it's the default case, for correct submissions.
-        // Go put the correct anwer in resultsPair (top tier, not reinforcement tier). It's a new domino, which has no need for a reinforcement tier, yet.
-        resultsPair.targetPair[newDomino.leftOrRight] = targetPair[newDomino.leftOrRight];
-      }
-    }
-  },
-};
-
 export default function createTestSlice(set) {
   return {
-    // MOVE CURRENTSCREEN TO BE BELOW SUBMITBAD, ONCE DONE CREATING UPDATESCREEN()
+    results: { // initialize 4 quarter-results: (2 namesOrObjects x 2 listHalf)
+      names: { one: createQuarterResults(HARD.names), two: createQuarterResults(HARD.names) },
+      objects: { one: createQuarterResults(HARD.objects), two: createQuarterResults(HARD.objects) },
+    },
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // OH AND I NEED TO HANDLE INSTRUCTIONSSCREEN INITIALIZING THE nulled keys (with help from derivedKeys :). Check muse.
+    presentables: {
+      targetPairs: { // FOR DOMINO (names & objects; one and two)
+        // targetPairs also contains the stories & storyTimes. That's fine. They belong together conceptually & are accessed together.
+        names: {
+          one: [
+            { leftHalf: 'liam', rightHalf: 'emma' },
+            { leftHalf: 'emma', rightHalf: 'noah' },
+            { leftHalf: 'noah', rightHalf: 'ava' },
+            { leftHalf: 'ava', rightHalf: 'mia' },
+            { leftHalf: 'mia', rightHalf: 'ethan' },
+          ],
+          two: [
+            { leftHalf: 'chloe', rightHalf: 'owen' },
+            { leftHalf: 'owen', rightHalf: 'caleb' },
+            { leftHalf: 'caleb', rightHalf: 'jack' },
+            { leftHalf: 'jack', rightHalf: 'hannah' },
+            { leftHalf: 'hannah', rightHalf: 'leo' },
+          ],
+        },
+        objects: {
+          one: [
+            { leftHalf: 'rake', rightHalf: 'leaves', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'leaves', rightHalf: 'stream', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'stream', rightHalf: 'bees', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'bees', rightHalf: 'hivebox', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'hivebox', rightHalf: 'mouse', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+          ],
+          two: [
+            { leftHalf: 'peas', rightHalf: 'trellis', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'trellis', rightHalf: 'fish', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'fish', rightHalf: 'coins', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'coins', rightHalf: 'flag', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'flag', rightHalf: 'shoes', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+          ],
+        },
+      },
+    },
+
     currentScreen: {
       // This section of currentScreen is ONLY LISTENED TO BY setCorrect() and submitBad(). incrementKeys.recall resets/increments whichFocus, and derivedKeys resets time. Not listened to by any components.
       time: {
@@ -342,8 +95,8 @@ export default function createTestSlice(set) {
         listHalf: null,
         echoOrRecall: null,
         // this array contains the counterbalanced order (of screens) for this participant. Eg names1 names2 objects1 objects2.
-        screenIndex: null, // increments along the array. The value is sent to whichScreen.
-        array: ((nthParticipant) => {
+        screenIndex: 0, // increments along the array. The value is sent to whichScreen.
+        screenArray: ((nthParticipant) => {
           // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
           const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
           const names2 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
@@ -365,9 +118,31 @@ export default function createTestSlice(set) {
               order = [objects2, objects1, names2, names1];
               break;
           };
-          return ['GeneralInstructions', ...order.flat()]; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
+          return ['GeneralInstructions', ...order.flat(), 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
         })(HARD.nthParticipant), // an Immediately Invoked Function Expression. Wrap an arrow function in parentheses, and pass it an argument in parentheses. (()=>{})() runs once and that's it. Great for initializing.
-
+        keysArray: ((nthParticipant) => {
+          // where counterbalanced.screenArray holds 'SpecificInstructions', keysArray needs to hold a 3-key object (with which to initialize currentScreen).
+          const names1 = [{ namesOrObjects: 'names', listHalf: 'one', echoOrRecall: 'echo' }, null, { namesOrObjects: 'names', listHalf: 'one', echoOrRecall: 'recall' }, null];
+          const names2 = [{ namesOrObjects: 'names', listHalf: 'two', echoOrRecall: 'echo' }, null, { namesOrObjects: 'names', listHalf: 'two', echoOrRecall: 'recall' }, null];
+          const objects1 = [{ namesOrObjects: 'objects', listHalf: 'one', echoOrRecall: 'echo' }, null, { namesOrObjects: 'objects', listHalf: 'one', echoOrRecall: 'recall' }, null];
+          const objects2 = [{ namesOrObjects: 'objects', listHalf: 'two', echoOrRecall: 'echo' }, null, { namesOrObjects: 'objects', listHalf: 'two', echoOrRecall: 'recall' }, null];
+          let order = [];
+          switch (nthParticipant % 4) {
+            case 0:
+              order = [names1, names2, objects1, objects2];
+              break;
+            case 1:
+              order = [names2, names1, objects2, objects1];
+              break;
+            case 2:
+              order = [objects1, objects2, names1, names2];
+              break;
+            case 3:
+              order = [objects2, objects1, names2, names1];
+              break;
+          };
+          return [null, ...order.flat()]; // flatten [names1, names2, objects1, objects2] into a single-level array of nulls and objects. By default, flat() only flattens the top level. It is not capable of flattening an object.
+        })(HARD.nthParticipant),
       },
       // This section of currentScreen is listened to by components. (One store-object per component; this prevents listening overlaps & side-effects.) Favor the components listening directly, rather than passing them props.
       // Each <component>Pointer contains pointers & display-state:
@@ -423,13 +198,8 @@ export default function createTestSlice(set) {
           ),
       ),
     },
-    //////////////////////////////
-    results: { // initialize 4 quarter-results: (2 namesOrObjects x 2 listHalf)
-      names: { one: createQuarterResults(HARD.names), two: createQuarterResults(HARD.names) },
-      objects: { one: createQuarterResults(HARD.objects), two: createQuarterResults(HARD.objects) },
-    },
 
-    // Below are 3 setters, which act upon the above results datastructure.
+    // Below are 3 setters, which act upon the 3 datastructures above (results, presentables, & currentScreen).
     // Each setter contains two functions: an echo-version & a recall-version. Subset & call like so: submitBad[echoOrRecall](wrongEntry)
 
     setCorrect: { // to document a correct submission; this triggers attempt-reset, incrementKeys, & derivedKeys.
@@ -448,7 +218,6 @@ export default function createTestSlice(set) {
           derivedKeys.echo(draftState);
         };
       }, false, 'setCorrect.echo'),
-      // REFACTORED VERSION (WHICH HANDLES BOTH CORRECT & IDK)
       recall: (IDK) => set((draftState) => {
         // get the currently focused domino, which we'll use to subset recall_dominoPointers
         const { pairIndex, leftOrRight } = draftState.testSlice.currentScreen.whichFocus;
@@ -549,44 +318,37 @@ export default function createTestSlice(set) {
         currentScreen.recallPointer.dominoResetKeys[pairIndex][leftOrRight] = `leftOrRight:${leftOrRight}-attempt:${currentScreen.attempt}-thisPairNeedsReinforcement:${thisPairNeedsReinforcement}`;
       }, false, 'submitBad.recall'),
     },
+    nextScreen: () => set((draftState) => {
+      // an object ref, whose keys we'll mutate:
+      const { counterbalanced: ctb } = draftState.testSlice.currentScreen; // (renamed it ctb for brevity)
+      // 4 primitives, which won't be mutated:
+      const { namesOrObjects, listHalf, echoOrRecall } = ctb.keysArray[ctb.screenIndex];
+      const { whichScreen } = draftState.testSlice.currentScreen;
 
-    presentables: {
-      targetPairs: { // FOR DOMINO (names & objects; one and two)
-        // targetPairs also contains the stories & storyTimes. That's fine. They belong together conceptually & are accessed together.
-        names: {
-          one: [
-            { leftHalf: 'liam', rightHalf: 'emma' },
-            { leftHalf: 'emma', rightHalf: 'noah' },
-            { leftHalf: 'noah', rightHalf: 'ava' },
-            { leftHalf: 'ava', rightHalf: 'mia' },
-            { leftHalf: 'mia', rightHalf: 'ethan' },
-          ],
-          two: [
-            { leftHalf: 'chloe', rightHalf: 'owen' },
-            { leftHalf: 'owen', rightHalf: 'caleb' },
-            { leftHalf: 'caleb', rightHalf: 'jack' },
-            { leftHalf: 'jack', rightHalf: 'hannah' },
-            { leftHalf: 'hannah', rightHalf: 'leo' },
-          ],
-        },
-        objects: {
-          one: [
-            { leftHalf: 'rake', rightHalf: 'leaves', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'leaves', rightHalf: 'stream', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'stream', rightHalf: 'bees', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'bees', rightHalf: 'hivebox', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'hivebox', rightHalf: 'mouse', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-          ],
-          two: [
-            { leftHalf: 'peas', rightHalf: 'trellis', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'trellis', rightHalf: 'fish', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'fish', rightHalf: 'coins', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'coins', rightHalf: 'flag', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'flag', rightHalf: 'shoes', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-          ],
-        },
-      },
-    },
+      if (whichScreen === 'SpecificInstructions') { // it's ok to update the keys. keysArray has values for them, here. Update them for the next 8th of the test.
+        ctb.namesOrObjects = namesOrObjects; // if !== 'SpecificInstructions', then nextScreen was triggered by finishing an 8th of the test, and we actually want the ctb keys to persist (so the next SpecificInstructions can read them, and know what was just completed).
+        ctb.listHalf = listHalf;
+        ctb.echoOrRecall = echoOrRecall;
+
+        // attempt = 0 is conceptually an "incrementKeys" task, not a "derivedKeys" task
+        draftState.testSlice.currentScreen.attempt = 0;
+
+        // generic increment logic for whichScreen, using screenIndex to subset screenArray.
+        ctb.screenIndex++;
+        draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[ctb.screenIndex];
+
+        // call derivedKeys, which contains logic to initialize the rest of the keys
+        if (echoOrRecall === 'echo') {
+          derivedKeys.echo({ init: true }, draftState);
+        }
+        else if (echoOrRecall === 'recall') {
+          const whichFocus = draftState.testSlice.currentScreen.whichFocus;
+          whichFocus.pairIndex = 0;
+          whichFocus.leftOrRigh = 'leftHalf';
+          derivedKeys.recall({ init: true }, draftState, whichFocus);
+        }
+      }
+    }),
 
     //////////////////////////////////////////////////////////////////
     // LEGACY CODE. GRADUALLY MOVE EVERYTHING BELOW UP INTO THE DESIRED 3 DATASTRUCTURES.

@@ -12,7 +12,7 @@ const WelcomeText = () => {
       <h3 style={styles.traits}>(Order-Linking & Similarity-Linking)</h3>
       <p style={styles.byline}>by Luke Hafermann, for the Quantitative Social Sciences major<br />(an undergraduate Honors Thesis in QSS)</p>
       <p style={styles.supervision}>Under the Supervision of Arjen Stolk, PhD;<br />Department of Psychological and Brain Sciences</p>
-      <p style={styles.invitation}>You are invited to participate in this study!<br />It is a research study, with more information below to help inform your decision of whether you’d like to participate.<br /><br />Website still under construction, to be completed by end of week 4 Winter Term. Testing would then begin, contingent on IRB approval.</p>
+      <p style={styles.invitation}><b>You are invited to participate in a research study!</b><br /><br />Website is in beta testing phase, during week 7. Planning to open to all participants week 8 Winter Term.</p>
     </div>
   );
 };
