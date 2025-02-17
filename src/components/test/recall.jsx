@@ -41,7 +41,7 @@ const Recall = () => {
             pairIndex={pairIndex}
             leftOrRightHalf="rightHalf"
           />
-          <button onClick={setCorrect.recall('IDK')} // IDK button is there, always. (extra points for a css that makes it fade in.)
+          <button onClick={setCorrect.recall('IDK')} // IDK button is there, always. (extra points for a css that makes it fade in.) // IDK button should only be clickable when whichFocus.leftOrRight === 'rightHalf' and the whichFocus.pairIndex is its pairIndex. & it should be hidden & not clickable when thisPairNeedsReinforcement === true. IDK would try to create a second nested results structure...
           >IDK
           </button>
           {/* Placeholder for progressbar */}
