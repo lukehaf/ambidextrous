@@ -1,8 +1,9 @@
 // general_instructions.jsx
 import React from 'react';
+import useStore from '../../store';
 import styles from '../welcome/study_info.module.scss';
 
-const GeneralInstructions = () => {
+export const GeneralInstructionsText = () => {
   return (
     <div>
       <h2 className={styles.subheader}>What does participation involve?</h2>
@@ -29,4 +30,13 @@ const GeneralInstructions = () => {
   );
 };
 
-export default GeneralInstructions;
+export const GeneralInstructions = () => {
+  const nextScreen = useStore(({ testSlice }) => testSlice.nextScreen);
+  return (
+    <div>
+      <GeneralInstructionsText />
+      { /* NextScreen button */}
+      <button onClick={nextScreen} className={styles.navButton}>Next Screen</button>
+    </div>
+  );
+};

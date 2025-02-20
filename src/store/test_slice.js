@@ -95,7 +95,7 @@ export default function createTestSlice(set) {
         listHalf: null,
         echoOrRecall: null,
         // this array contains the counterbalanced order (of screens) for this participant. Eg names1 names2 objects1 objects2.
-        screenIndex: 0, // increments along the array. The value is sent to whichScreen.
+        screenIndex: 3, // increments along the array. The value is sent to whichScreen.
         screenArray: ((nthParticipant) => {
           // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
           const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
@@ -118,7 +118,7 @@ export default function createTestSlice(set) {
               order = [objects2, objects1, names2, names1];
               break;
           };
-          return ['GeneralInstructions', ...order.flat(), 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
+          return ['GeneralInstructions', ...order.flat(), 'SelfReport', 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
         })(HARD.nthParticipant), // an Immediately Invoked Function Expression. Wrap an arrow function in parentheses, and pass it an argument in parentheses. (()=>{})() runs once and that's it. Great for initializing.
         keysArray: ((nthParticipant) => {
           // where counterbalanced.screenArray holds 'SpecificInstructions', keysArray needs to hold a 3-key object (with which to initialize currentScreen).
@@ -148,7 +148,7 @@ export default function createTestSlice(set) {
       // Each <component>Pointer contains pointers & display-state:
       // // // Pointers: subset `presentables` and `results`; (this clears out ugly array-sifting logic from the components). (Naming-rule: append "pointer" to a state-object's name whenever its purpose is to subset 'presentables' or 'results'.)
       // // // Display-state: (WOULD be feasible to calculate within the component, via pointers/presentables/results). HOWEVER, it's another opportunity to declutter/hide logic, just like the pointers allow.
-      whichScreen: null, // stub. Currently I'm using the legacy currentScreenTest. // possible values: 'TestHasThreeUIs', 'EchoNames', 'EchoObjects', 'Recall'.
+      whichScreen: 'SpecificInstructions',
       echoPointer: { // listened to by the EchoNames component and the EchoObjects component
         // EchoNames and EchoObjects listens to a reset key, which resets both their Domino and timebar
         dominoResetKey: null,
@@ -170,16 +170,16 @@ export default function createTestSlice(set) {
         stackResetKey: null, // stackResetKey is an integer, and coincidentally always has the same value as lap. Nulled upon completion of 1/8th the test. Reinitialized to 0 by InstructionsScreen in preparation for next 1/8th.
         dominoResetKeys: // Initialized to be dominoStackHeight long, and be made of objects with leftHalf & rightHalf
         Array.from(
-          { length: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : null }, // an array of length dominoHeightNames = 5. The ternary's just to check whether I'm still using = 5 for both names and objects
+          { length: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects have different dominoHeight'), 0) }, // an array of length dominoHeightNames = 5. The ternary's just to check whether I'm still using = 5 for both names and objects
           // 2nd argument: a mapping function, to create the entries in the array. Here, each one's an object (with a leftHalf and rightHalf).
           () => Object.fromEntries( // expects an array of [key, value] pairs (which can be assembled into an object). Create that array using map.
             ['leftHalf', 'rightHalf'].map(key => [key, null]),
           )),
-        dominoStackHeight: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : null, // I'm currently assuming both lists have the same # of pairs, and that only one recallPointer is needed. (Or, I could have a setter, which is called by get() whenever objects changes to names)
+        dominoStackHeight: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects have different dominoHeight'), 0), // I'm currently assuming both lists have the same # of pairs, and that only one recallPointer is needed. (Or, I could have a setter, which is called by get() whenever objects changes to names)
       },
       recall_dominoPointers: // listened to by the Domino components (that render inside a Recall component). Contains 10 pointers-- one for each domino.
       Array.from(
-        { length: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : null }, // an array of length dominoHeightNames = 5. The ternary's just to check whether I'm still using = 5 for both names and objects
+        { length: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects have different dominoHeight'), 0) }, // an array of length dominoHeightNames = 5. The ternary's just to check whether I'm still using = 5 for both names and objects
         (_, pairIndex) => // Make pairIndex available (for dynamic use, initializing each dominoPointer). // The mapping function's 1st argument is _, unutilized here. The 2nd argument is the index of the array, which you can name whatever you like (for instance, pairIndex).
           Object.fromEntries( // expects an array of [key, value] pairs (which can be assembled into an object). Create that array using map.
             ['leftHalf', 'rightHalf'].map(key => [key, { // map takes an array of keys, and returns an array of [key, value] arrays. The value (the actual dominoPointer structure) is the following object:
@@ -215,7 +215,7 @@ export default function createTestSlice(set) {
         // increment rep, pairIndex, and lap (until this 8th of the test is finished)
         const returned = incrementKeys.echo[namesOrObjects](draftState); // a 3-version helper function
         if (returned !== 'complete') { // When this 8th of the test is 'complete', don't try to call derivedKeys. (incrementKeys just set to null all the incrementable and derivable keys. (in echo_dominoPointer and echoPointer). Don't try to call derivedKeys.)
-          derivedKeys.echo(draftState);
+          derivedKeys.echo(draftState, {});
         };
       }, false, 'setCorrect.echo'),
       recall: (IDK) => set((draftState) => {
@@ -255,7 +255,7 @@ export default function createTestSlice(set) {
             dominoResetKeys[oldDomino.pairIndex][leftOrRight] = `leftOrRight:${leftOrRight}-attempt:0-thisPairNeedsReinforcement:true`; // this could also use the whichFocus.pairIndex, since that wasn't changed by "incrementing"
           }); // END OF INCREMENTKEYS FUNCTIONALITY
 
-          derivedKeys.recall({ IDK }, draftState, whichFocus); // whichFocus requires the incremented whichFocus (the one for the new domino).
+          derivedKeys.recall(draftState, whichFocus, { IDK }); // whichFocus requires the incremented whichFocus (the one for the new domino).
         }
         else if (!IDK) { // handles correct submissions, not IDK button-clicks
           const whichFocus = draftState.testSlice.currentScreen.whichFocus;
@@ -270,7 +270,7 @@ export default function createTestSlice(set) {
           const returned = incrementKeys.recall(draftState);
 
           if (returned !== 'complete') { // When this 8th of the test is 'complete', don't try to call derivedKeys. (incrementKeys just set to null all the incrementable and derivable keys. (in echo_dominoPointer and echoPointer). derivedKeys would try to unNull them, but wouldn't have the resources to.)
-            derivedKeys.recall({ }, draftState, whichFocus); // an empty {} means this is not init and not IDK. whichFocus requires the incremented whichFocus (the one for the new domino).
+            derivedKeys.recall(draftState, whichFocus, { }); // an empty {} means this is not init and not IDK. whichFocus requires the incremented whichFocus (the one for the new domino).
           };
         };
       }, false, 'setCorrect.recall'),
@@ -322,7 +322,7 @@ export default function createTestSlice(set) {
       // an object ref, whose keys we'll mutate:
       const { counterbalanced: ctb } = draftState.testSlice.currentScreen; // (renamed it ctb for brevity)
       // 4 primitives, which won't be mutated:
-      const { namesOrObjects, listHalf, echoOrRecall } = ctb.keysArray[ctb.screenIndex];
+      const { namesOrObjects, listHalf, echoOrRecall } = ctb.keysArray[ctb.screenIndex] || {}; // default to an empty object. Every other keysArray entry is null.
       const { whichScreen } = draftState.testSlice.currentScreen;
 
       if (whichScreen === 'SpecificInstructions') { // it's ok to update the keys. keysArray has values for them, here. Update them for the next 8th of the test.
@@ -333,30 +333,35 @@ export default function createTestSlice(set) {
         // attempt = 0 is conceptually an "incrementKeys" task, not a "derivedKeys" task
         draftState.testSlice.currentScreen.attempt = 0;
 
-        // generic increment logic for whichScreen, using screenIndex to subset screenArray.
+        // generic increment logic for whichScreen, using screenIndex to subset screenArray. It renders the next screen, which requires that all the derivedKeys are ready. But render should wait for this batch of synchronous changes, including all the derivedKeys. So this can go above the derivedKeys call.
         ctb.screenIndex++;
         draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[ctb.screenIndex];
 
         // call derivedKeys, which contains logic to initialize the rest of the keys
         if (echoOrRecall === 'echo') {
-          derivedKeys.echo({ init: true }, draftState);
+          derivedKeys.echo(draftState, { init: true });
         }
         else if (echoOrRecall === 'recall') {
           const whichFocus = draftState.testSlice.currentScreen.whichFocus;
           whichFocus.pairIndex = 0;
-          whichFocus.leftOrRigh = 'leftHalf';
-          derivedKeys.recall({ init: true }, draftState, whichFocus);
+          whichFocus.leftOrRight = 'leftHalf';
+          derivedKeys.recall(draftState, whichFocus, { init: true });
         }
       }
-    }),
+      else if (whichScreen === 'GeneralInstructions') {
+        // generic increment logic for whichScreen, using screenIndex to subset screenArray.
+        ctb.screenIndex++;
+        draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[ctb.screenIndex];
+      }
+    }, false, 'nextScreen'),
 
     //////////////////////////////////////////////////////////////////
     // LEGACY CODE. GRADUALLY MOVE EVERYTHING BELOW UP INTO THE DESIRED 3 DATASTRUCTURES.
     // screen-state stuff for knowing which screen-type to render. (right now, you select this via TestHasThreeUIs, but eventually it will also listen to whichPR)
-    currentScreenTest: 'TestHasThreeUIs', // eventually this can be encompassed by just currentScreen, but for now I'm actually trying to show 2 screens at once sometimes
-    goToEchoNames: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'EchoNames'; }, false, 'goToEchoNames'), // couldn't I have just one function for all this? and pass the screen name? & then somehow get that out into the devtools middleware?
-    goToEchoObjects: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'EchoObjects'; }, false, 'goToEchoObjects'),
-    goToRecall: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'Recall'; }, false, 'goToRecall'),
+    // currentScreenTest: 'TestHasThreeUIs', // eventually this can be encompassed by just currentScreen, but for now I'm actually trying to show 2 screens at once sometimes
+    // goToEchoNames: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'EchoNames'; }, false, 'goToEchoNames'), // couldn't I have just one function for all this? and pass the screen name? & then somehow get that out into the devtools middleware?
+    // goToEchoObjects: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'EchoObjects'; }, false, 'goToEchoObjects'),
+    // goToRecall: () => set(({ testSlice: draftState }) => { draftState.currentScreenTest = 'Recall'; }, false, 'goToRecall'),
 
     // we also need a counterBalanced object: an array of strings, dictating the order, say Names1 Names2 Objects1 Objects2. That lets the store be set up in the same order each time, and handles some conditional render type thing about what ([namesOrObjects][1vs2] gets passed to recall, echo_names, and echo_objects)?
   };

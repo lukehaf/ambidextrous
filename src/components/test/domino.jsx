@@ -3,11 +3,13 @@ import useStore from '../../store/index.js'; // Zustand store
 import { initializeRemainderString, handleKeyDown, useDominoFocus, useCaretAtEnd } from './domino_logic.jsx';
 
 function Domino(props) {
-  // dominoPointer subsets `presentables` & `results`, & contains display state. // hook the correct dominoPointer: if props exist, this domino's a recall-domino, and subset for the correct one. Else, hook the echo_dominoPointer.
-  const dominoPointer = useStore((state) => props ? state.testSlice.currentScreen.recall_dominoPointers[props.pairIndex][props.leftOrRight] : state.testSlice.currentScreen.echo_dominoPointer);
+  // dominoPointer subsets `presentables` & `results`, & contains display state. // hook the correct dominoPointer: if props exist, this domino's a recall-domino, and subset for the correct one. Else, hook the echo_dominoPointer. Note that React sets props as {} if not passed (which is truthy), so you have to check whether one of props' PROPERTIES is truthy. NOT the pairIndex, which is sometimes 0 (falsy).
+  const dominoPointer = useStore((state) => props.leftOrRight ? state.testSlice.currentScreen.recall_dominoPointers[props.pairIndex][props.leftOrRight] : state.testSlice.currentScreen.echo_dominoPointer);
+  // Targetpair is required by initializeRemainderString() (which cannot hook the store itself, since it's not a react component or custom hook).
+  const targetPair = useStore((state) => state.testSlice.presentables.targetPairs[dominoPointer.namesOrObjects][dominoPointer.listHalf][dominoPointer.pairIndex]); // targetPair also includes a storyText and a storyTime, if it's for an objects-list. Unused, here.
 
   // useState() is a react hook for managing state locally (within the component). Helps unclutter the Zustand store.
-  const [remainderString, setRemainderString] = useState(initializeRemainderString(dominoPointer)); // remainderString is what users have left to type. It's an array of single-character-objects which get mapped into single-char <span> elements.
+  const [remainderString, setRemainderString] = useState(initializeRemainderString(targetPair, dominoPointer)); // remainderString is what users have left to type. It's an array of single-character-objects which get mapped into single-char <span> elements.
   const [userEntry, setUserEntry] = useState([]); // initialize userEntry with an empty array; they haven't typed anything yet.
 
   // Changing a ref does not trigger a re-render. This means refs are perfect for storing information that doesn’t affect the visual output of your component.
@@ -21,9 +23,11 @@ function Domino(props) {
   //                               // wrongChar is actually used both inside handleKeyDown & in Domino (to conditionally render a space).
 
   // handleKeyDown: modify remainderString & userEntry; handle backspace & space (for reset & submit behaviors).
-  // Outside handleKeyDown, though, first hook 3 additional Zustand setters (needed by handleKeyDown). (Hook best-practices: pass the RESULTS from hooks (such as a setter). Don't ever call hooks (eg useStore()) INSIDE a helper function. Only call them inside the react component itself, or inside a custom hook which is itself inside the react component.)
-  const { submitBad, setCorrect, updateDominoResetKey } = useStore((state) => ({ submitBad: state.testSlice.submitBad, setCorrect: state.testSlice.setCorrect, updateDominoResetKey: state.testSlice.updateDominoResetKey }));
-  const boundHandleKeyDown = (e) => handleKeyDown(e, { remainderString, setRemainderString, userEntry, setUserEntry }, { targetLength, firstSpace, wrongChar }, dominoPointer.echoOrRecall, { submitBad, setCorrect, updateDominoResetKey }); // this boundHandleKeyDown wrapper cleans up the JSX (by keeping all these arguments out of it)
+  // Outside handleKeyDown, though, first hook 2 additional Zustand setters (needed by handleKeyDown). (Hook best-practices: pass the RESULTS from hooks (such as a setter). Don't ever call hooks (eg useStore()) INSIDE a helper function. Only call them inside the react component itself, or inside a custom hook which is itself inside the react component.)
+  const submitBad = useStore((state) => state.testSlice.submitBad); // problem: I tried to combine them into one, but it returned an object literal (a new object) rather than a ref to the one in state; this broke the hook's memoization capability. const { submitBad, setCorrect } = useStore((state) => ({submitBad: state.testSlice.submitBad, setCorrect: state.testSlice.setCorrect, }));
+  const setCorrect = useStore((state) => state.testSlice.setCorrect);
+
+  const boundHandleKeyDown = (e) => handleKeyDown(e, { remainderString, setRemainderString, userEntry, setUserEntry }, { targetLength, firstSpace, wrongChar }, dominoPointer.echoOrRecall, { submitBad, setCorrect }); // this boundHandleKeyDown wrapper cleans up the JSX (by keeping all these arguments out of it)
 
   // for focus & for placing caret. // begins null; points to the DOM object once it exists
   const dominoRef = useRef(null);
@@ -39,16 +43,16 @@ function Domino(props) {
 
   // Conditionally hide the grey remainderString & linting (for recall dominoes, if their leftOrRight === 'rightHalf' && thisPairIsReinforcement === false). (&& returns a boolean.) Echo dominoes don't have either of those keys, so they'll return values of 'undefined', which makes the && return false. Good.
   // hideGreyRed's a local variable. It'll be created anew each render cycle, derived from values in dominoPointer. That's fine.
-  const hideGreyRed = (dominoPointer.leftOrRight === 'rightHalf' && dominoPointer.thisPairIsReinforcement === false);
+  const hideGreyRed = (dominoPointer.leftOrRight === 'rightHalf' && dominoPointer.thisPairNeedsReinforcement === false);
 
   // return a contentEditable, containing: (remainderString in grey) to the right of (userEntry in black, occasionally red-highlighted).
   return (
     <div
       ref={dominoRef} // so useDominoFocus can programmatically focus this div
-      tabIndex={0} // Make div programmatically focusable
+      tabIndex={-1} // Make div only focusable programmatically
       contentEditable={true}
       suppressContentEditableWarning={true} // React isn't designed to manage contentEditable elements safely, and gives a warning. Don't disable this warning unless you're confident you're manually handling all updates to the DOM in the contentEditable area (including user input), & disabling the contentEditable div's desire to display its own stuff, & explicitly only showing letters which are from the react state.
-      onKeyDown={boundHandleKeyDown}
+      onKeyDown={boundHandleKeyDown} // this gives the REFERENCE to the function. Otherwise, onKeyDown={boundHandleKeyDown()} immediately evaluates the function, and doesn't respond to future onKeyDown events.
       onMouseDown={(e) => e.preventDefault()} // Prevents cursor placement via mouse clicks
       style={{
         outline: '1px solid black',
@@ -87,8 +91,7 @@ function Domino(props) {
           {/* Using &nbsp; ensures a non-breaking space is explicitly rendered. (otherwise a lone space character will get ignored by browsers). Another potential solution: style={{ display: 'inlineBlock' }} for spans means their width doesn't get ignored. */}
           {wrongChar.current === true && <span>&nbsp;</span>}
 
-          {/* Next block is the grey remainderString */}
-
+          {/* Next block is the grey remainderString. */}
           {remainderString.map((t, index) => (
             <span
               key={index}

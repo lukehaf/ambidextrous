@@ -1,20 +1,10 @@
 // domino_logic.jsx
+import { useEffect, useLayoutEffect } from 'react'; // for my custom useDominoFocus hook
 
-import useStore from '../../store/index.js'; // Zustand store
-import { useEffect } from 'react'; // for my custom useDominoFocus hook
-
-export const initializeRemainderString = (dominoPointer) => {
-  // dominoPointer subsets `presentables` & `results` & contains display state.
-  // // // keys for subsetting:
-  const namesOrObjects = dominoPointer.namesOrObjects;
-  const listHalf = dominoPointer.listHalf;
-  const pairIndex = dominoPointer.pairIndex; // (overwritten by props.pairIndex, if that's defined)
-  // // // keys for display-type:
+export const initializeRemainderString = (targetPair, dominoPointer) => {
+  // dominoPointer contains two keys for specifying display type:
   const echoOrRecall = dominoPointer.echoOrRecall; // (determines whether the domino grabs 2 words or just 1.)
   const leftOrRight = dominoPointer.leftOrRight; // (determines which word, if just 1.) (null in the case of 2 words (ie, an echo domino))
-
-  // hook the correct pair from the Zustand store
-  const targetPair = useStore((state) => state.testSlice.presentables.targetPairs[namesOrObjects][listHalf][pairIndex]); // targetPair also includes a storyText and a storyTime, if it's for an objects-list. Unused, here.
 
   if (echoOrRecall === 'echo') {
     // Concatenate leftHalf and rightHalf, separated by a non-breaking space
@@ -29,12 +19,13 @@ export const initializeRemainderString = (dominoPointer) => {
 
   // helper function: converts a string into an array of character-objects. Declare it with function (rather than const) so that it gets hoisted.
   function stringToCharObjects(str) {
-    str.split('').map((char) => ({
+    return str.split('').map((char) => ({
       char: char === ' ' ? '\u00A0' : char, // Replace space with non-breaking space. Shouldn't really be needed anymore, since now the pairs are stored as individual words (sans spaces). There shouldn't be any spaces in the string
     }));
   }
 
   // Default to an empty array if conditions are not met
+  console.log('conditions were not met');
   return [];
 };
 
@@ -49,8 +40,7 @@ export const handleKeyDown = (e, // "e" is the event.
   // 3 zustand setters (which act on testSlice.results). Each has 2 versions: one for echo, and one for recall.
   // Subset & call like so: submitBad[echoOrRecall](wrongEntry), where wrongEntry contains { submissionType, userEntry }
   { submitBad,
-    setCorrect, // to document a correct submission, which triggers the nextScreen setter
-    updateDominoResetKey }, // subset and call like so: updateResetKey[echoOrRecall]()
+    setCorrect }, // to document a correct submission, which triggers the nextScreen setter
 ) => {
   // Prevent newlines and tabbing; prevent arrow keys from moving the caret
   if (e.key === 'Enter' || e.key === 'Tab' || e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -61,11 +51,9 @@ export const handleKeyDown = (e, // "e" is the event.
   // change "backspace" to include submit & reset behaviors
   else if (e.key === 'Backspace') {
     e.preventDefault();
-    if (wrongChar.current === true || userEntry.length !== targetLength.current) {
-      submitBad[echoOrRecall]({ submissionType: 'Backspace', userEntry }); // Only submit the user's entry if it was interesting (i.e., wrong). // also submits if it was correct but incomplete (too short).
-    }
-    // rerender the domino (reset its state), by incrementing its "key", located in the zustand store.
-    updateDominoResetKey[echoOrRecall]();
+    // if (wrongChar.current === true || userEntry.length !== targetLength.current) { // originally I was only going to submit userEntry if it was wrong or not the right length, but it turns out I always need the reset functionality of submitBad, and I don't want to refactor that out
+    submitBad[echoOrRecall]({ submissionType: 'Backspace', userEntry });
+    // submitBad also rerenders the domino (resets its state), by incrementing its "key", located in the zustand store.
   }
 
   // detect when spacebar's pressed
@@ -73,7 +61,7 @@ export const handleKeyDown = (e, // "e" is the event.
     e.preventDefault();
     if (firstSpace.current === true || echoOrRecall === 'recall') { // for echo, it's the 2nd press which indicates a submission, so firstSpace.current would have to be true. For recall, it's the 1st press which indicates a submission, so firsSpace.current can be false. For recall, there's no non-submission logic which could turn firstSpace.current to true.
       // execute the submission-logic. (DO NOT execute the non-submission logic.)
-      if (wrongChar.current === false && userEntry.length === targetLength) { // detect case 1: a correct submission. (Too short (with all the characters correct) doesn't flip wrongChar but should still count as an incorrect submission.)
+      if (wrongChar.current === false && userEntry.length === targetLength.current) { // detect case 1: a correct submission. (Too short (with all the characters correct) doesn't flip wrongChar but should still count as an incorrect submission.)
         // the zustand store should record:
         setCorrect[echoOrRecall](); // sets this as true
       }
@@ -81,8 +69,7 @@ export const handleKeyDown = (e, // "e" is the event.
         // the zustand store should NOT record setCorrect[echoOrRecall](); as true.
         submitBad[echoOrRecall]({ submissionType: 'Spacebar', userEntry }); // record incorrect submissions (correct ones are boring & don't get recorded)
       }
-      // execute the clear-domino logic, regardless of (evaluating lengths & wrongChar).
-      updateDominoResetKey[echoOrRecall]();
+      // execute the clear-domino logic, regardless of (evaluating lengths & wrongChar). // actually, now the clear-domino logic is included in submitBad
     }
     else { // execute the non-submission logic:
       // Now we know that a space was typed, and it was the first space, so set that to true. Thus it's not indicating a submission.
@@ -120,7 +107,8 @@ export const handleKeyDown = (e, // "e" is the event.
       //                                                             // undefined: react essentially behaves as if the property isn't set. // other options: an if statement (outside the object literal) or the spread operator (inside the object literal).
       // color: (just in case I want to conditionally change that, too)
     };
-      // unconditionally add newChar to userEntry. It's a local usestate hook, so define it inline. Spread operator handles objects fine.
+
+    // unconditionally add newChar to userEntry. It's a local usestate hook, so define it inline. Spread operator handles objects fine.
     setUserEntry((prev) => [...prev, newChar]);
     // if the typed char is correct, lop off remainderString's first letter. (as soon as wrongChar becomes false, no more of remainderString's first letters will ever get lopped off.)
     if (wrongChar.current === false) {
@@ -129,7 +117,7 @@ export const handleKeyDown = (e, // "e" is the event.
   }
 };
 
-// a custom hook I made, for handling focus
+// a custom hook I made, for handling focus, bc I wanted to use useEffect inside a function (but you can't do that; you have to create a custom hook, to use a hook inside a function)
 export const useDominoFocus = (
   dominoRef, // begins null; points to the DOM object once it exists. useEffect ensures that .focus() doesn't try to run before the DOM is ready.
   echoOrRecall, // echo has one domino, which auto-focuses.
@@ -141,7 +129,8 @@ export const useDominoFocus = (
     }
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    console.log('focused is ', focused);
     if (dominoRef.current && echoOrRecall === 'recall' && focused) {
       dominoRef.current.focus();
     }

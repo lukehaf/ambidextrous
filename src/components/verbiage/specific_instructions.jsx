@@ -1,14 +1,15 @@
 // specific_instructions.jsx
-import { React, useState } from 'react';
+import React, { useState } from 'react';
 import useStore from '../../store/index.js';
 
 import styles from '../welcome/study_info.module.scss';
 
-import GeneralInstructions from './general_instructions.jsx';
+import { GeneralInstructionsText } from './general_instructions.jsx';
 
 const SpecificInstructions = () => {
-  const [selected, setSelected] = useState(false);
+  const [showGeneral, setShowGeneral] = useState(false);
   const nextScreen = useStore(({ testSlice }) => testSlice.nextScreen);
+
   return (
     <div>
       <h2 className={styles.subheader}>Progress & Next Instructions</h2>
@@ -22,19 +23,19 @@ const SpecificInstructions = () => {
       <p className={styles.paragraph}>
         [here's an instructions-block which conditionally renders. 4 versions: EchoNames, RecallNames, EchoObjects, RecallObjects]
       </p>
-      { /* conditionally render <GeneralInstructions /> */}
-      <label>
-        <input
-          type="radio"
-          name="instructions"
-          checked={selected}
-          onChange={() => setSelected(true)}
-        />
-        Show General Instructions
-      </label>
-      {selected && <GeneralInstructions />}
-      { /* NextScreen button */}
-      <button onClick={nextScreen} className={styles.navButton}>Next Screen</button>
+      { /* button for <GeneralInstructions /> and nextScreen */}
+      <div>
+        <button
+          onClick={() => setShowGeneral((prev) => !prev)}
+          className={styles.navButton}
+        >
+          {showGeneral ? 'Hide' : 'Show'} General Instructions
+        </button>
+        { /* NextScreen button */}
+        <button onClick={nextScreen} className={styles.navButton}>Next Screen</button>
+        { /* conditionally render <GeneralInstructions /> */}
+        {showGeneral && <GeneralInstructionsText />}
+      </div>
     </div>
   );
 };
