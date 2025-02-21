@@ -95,7 +95,7 @@ export default function createTestSlice(set) {
         listHalf: null,
         echoOrRecall: null,
         // this array contains the counterbalanced order (of screens) for this participant. Eg names1 names2 objects1 objects2.
-        screenIndex: 3, // increments along the array. The value is sent to whichScreen.
+        screenIndex: 1, // increments along the array. The value is sent to whichScreen.
         screenArray: ((nthParticipant) => {
           // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
           const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];

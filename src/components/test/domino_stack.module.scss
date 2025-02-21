@@ -1,37 +1,47 @@
 $domino-width: 100px;
+$IDK-width: 40px;
 $vertical-dominoes: 5;
 $horizontal-dominoes: 6;
 
 .dominoStack {
     // there's nothing flexy about this. It's a left-justified vertical list + margin-left. No need for fancy flexbox wrapping/centering.
-    width: $domino-width * $horizontal-dominoes;
+    width: $domino-width * $horizontal-dominoes + $IDK-width;
     // height is as tall as it needs to be. (Thus, don't specify it.)
-    border: 2px dotted rgb(96 139 168);
-
-    // & > :nth-child(3) { // make sure to include the > (the immediate descendant combinator) after &. Otherwise it selects .dominoStacks that ARE a first child, rather than the first child OF .dominoStacks.
-    //     border: 2px solid green;
-    //     margin-left: $domino-width;
-    // }
 
     @for $i from 1 through $vertical-dominoes {
-        & > :nth-child(#{$i}) {
-            border: 2px solid green;
+        & > :nth-child(#{$i}) { // make sure to include the > (the immediate descendant combinator) after &. Otherwise it selects .dominoStacks that ARE a first child, rather than the first child OF .dominoStacks.
             margin-left: #{($i - 1) * 100}px; //I'd use $domino-width here, but it has px on the end already.
-          // transition: all .2s #{$i * .1}s ease-in;
         }
     }
 }
 
-.dominoPair {
+.dominoPairIDK {
     display: flex;
-    flex-wrap: nowrap; // keeps the dominoes side-by-side
-    width: 2 * $domino-width + 4px;
-    border: 2px solid red;
+    flex-wrap: nowrap; // keeps the dominoes side-by-side. It's the default for flex
+    width: 2 * $domino-width + $IDK-width;
 }
 .domino {
-    width: $domino-width - 2 * 5px - 2 * 3px; // subtract border & padding (internal to border). No padding
-    height: 50px;
+    width: $domino-width - 2 * 5px; // subtract border & padding (padding is inside border, and margin (the space between elements) is outside border). Outline vs border: outline is not included in dimensions, and can overwrite stuff outside the element.
+    height: 20px;
     padding: 5px;
-    border: 3px solid gray;
-    margin: 0;
+    margin: -1px -1px 0px 0px; // top right bottom left. Make some of the borders overlap, so they don't appear doubled up.
+    border: 1px solid black;
+    outline: none; // get rid of the annoying default "focused" border
+
+    font-size: 16px;
+    font-family: monospace;
+    cursor: text;
+
+    display: flex;
+    align-items: center; // vertically centered, rather than stretched (the default). align works on the cross axis.
+    flex-wrap: nowrap; // this is the default for flexboxes; it's just here to remind me
+    overflow: hidden; // prevents "multiline overflow." Keeps stuff from extending outside box.
+
+}
+.buttonIDK {
+    width: $IDK-width;
+}
+.unclickable {
+    pointer-events: none;
+    opacity: 0.8;
 }

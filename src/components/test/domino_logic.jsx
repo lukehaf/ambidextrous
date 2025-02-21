@@ -1,5 +1,5 @@
 // domino_logic.jsx
-import { useEffect, useLayoutEffect } from 'react'; // for my custom useDominoFocus hook
+import { useEffect } from 'react'; // for my custom useDominoFocus hook
 
 export const initializeRemainderString = (targetPair, dominoPointer) => {
   // dominoPointer contains two keys for specifying display type:
@@ -117,33 +117,34 @@ export const handleKeyDown = (e, // "e" is the event.
   }
 };
 
-// a custom hook I made, for handling focus, bc I wanted to use useEffect inside a function (but you can't do that; you have to create a custom hook, to use a hook inside a function)
+// a custom hook I made, for handling focus, bc I wanted to use useEffect inside a function (but you can't do that; you have to create a "custom hook" instead).
 export const useDominoFocus = (
+  echoOrRecall, // echo has one domino, which auto-focuses. Recall has 10 dominoes.
+  focused, // One of the recall dominoes has focused === true, in which case its dominoRef is passed to the centralized focus manager. (focused === undefined for echo; the key doesn't exist.)
   dominoRef, // begins null; points to the DOM object once it exists. useEffect ensures that .focus() doesn't try to run before the DOM is ready.
-  echoOrRecall, // echo has one domino, which auto-focuses.
-  focused, // recall has multiple dominoes, only one of which has focused === true. (focused === null or undefined for echo.)
+  dominoRefToFocus,
 ) => {
-  useEffect(() => {
+  useEffect(() => { // echo just needs to be auto-focused
     if (dominoRef.current && echoOrRecall === 'echo') { // Why check that dominoRef.current is no longer null? It should be unnecessary. useEffect only runs after the DOM is updated (which populates dominoRef with a DOM element). But it's better to have my web app fail to focus than utterly crash. (they could still click the home button, and go back there.)
       dominoRef.current.focus(); //                     // DEFENSIVE PROGRAMMING: it would be nice to have a "home" button and "emergency submit" and "resume later", and login capabilities, so they can reload their progress. But, I guess I can start running the test, and close it to additional participants if >1 person has website-crash issues...
     }
   }, []);
 
-  useLayoutEffect(() => {
-    console.log('focused is ', focused);
-    if (dominoRef.current && echoOrRecall === 'recall' && focused) {
-      dominoRef.current.focus();
+  useEffect(() => { // one recall domino has focused === true
+    if (dominoRefToFocus && dominoRef.current && echoOrRecall === 'recall' && focused) {
+      dominoRefToFocus.current = dominoRef.current;
     }
   }, [focused]); // dependency array: run useEffect whenever focused changes (and once on mount, of course, just like for a [] dependency array)
 };
 
-// Automatically place caret at the end of the userEntry string (on mount and when userEntry changes). (It's another custom hook, since it also contains useEffect().)
-export const useCaretAtEnd = (dominoRef, userEntry) => { // dominoRef points to the DOM object (whose caret we're interested in.) // userEntry is the dependency; just listen for when it changes.
+// Automatically place caret at the end of the userEntry string (on mount and when userEntry changes, or upon blur events). (It's another custom hook, since it also contains useEffect().)
+export const useCaretAtEnd = (dominoRef, userEntry, blurCount, // dominoRef points to the DOM object (whose caret we're interested in.) // userEntry & blurCount are the dependencies; just listen for when either changes.
+  echoOrRecall, focused) => { // only place caret if this Domino's focused.
   useEffect(() => {
-    if (dominoRef.current) {
+    if (dominoRef.current && (echoOrRecall === 'echo' || (echoOrRecall === 'recall' && focused))) { // If hidePair were true, there'd be no spans to place the focus within.
       placeCaretAtEnd(dominoRef.current);
     }
-  }, [userEntry]); // Dependency-- listen for when userEntry changes
+  }, [userEntry, blurCount]); // Dependency-- listen for when userEntry changes
 
   // Function for keeping caret at end of userEntry string, as they type
   const placeCaretAtEnd = (dominoElement) => {
@@ -158,7 +159,7 @@ export const useCaretAtEnd = (dominoRef, userEntry) => { // dominoRef points to 
     // Create a Range:
     // Identify the text node or element where the caret should go.
     // Use the Range API to set the exact start and end of the range (both at the same point for a collapsed caret (= nothing's highlighted/selected)).
-    const firstChild = dominoElement.children[0]; // children includes only element nodes, ignoring text and comment nodes. The 0th child is thus the span containing all the userEntry char spans.
+    const firstChild = dominoElement.children[0].children[0]; // children includes only element nodes, ignoring text and comment nodes. The 0th child is thus the span containing all the userEntry char spans.
 
     if (firstChild) {
       const offset = firstChild.childNodes.length; // the offset is the number of single-char spans within the userEntry span, so the offset grows as the user types.

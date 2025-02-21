@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import useStore from '../../store/index.js'; // Zustand store
 import { initializeRemainderString, handleKeyDown, useDominoFocus, useCaretAtEnd } from './domino_logic.jsx';
+import styles from './domino_stack.module.scss';
 
 function Domino(props) {
   // dominoPointer subsets `presentables` & `results`, & contains display state. // hook the correct dominoPointer: if props exist, this domino's a recall-domino, and subset for the correct one. Else, hook the echo_dominoPointer. Note that React sets props as {} if not passed (which is truthy), so you have to check whether one of props' PROPERTIES is truthy. NOT the pairIndex, which is sometimes 0 (falsy).
@@ -32,18 +33,32 @@ function Domino(props) {
   // for focus & for placing caret. // begins null; points to the DOM object once it exists
   const dominoRef = useRef(null);
 
-  // a custom hook I made, for handling focus
-  useDominoFocus(dominoRef,
-    dominoPointer.echoOrRecall, // echo has one domino, which auto-focuses.
-    dominoPointer.focused, // recall has multiple dominoes, only one of which has focused === true. (focused === undefined for echo; the key doesn't exist for echo.)
-  );
+  // a custom hook I made, for handling initial focus (and centrally-managed whichFocus changes, for Recall)
+  useDominoFocus(dominoPointer.echoOrRecall, // echo has one domino, which auto-focuses. Recall has 10 dominoes.
+    dominoPointer.focused, dominoRef, props.dominoRefToFocus); // One of the recall dominoes has focused === true, in which case its dominoRef is passed to the centralized focus manager. (focused === undefined for echo; the key doesn't exist.)
 
-  // Another custom hook: automatically place caret at the end of the userEntry string (on mount and when userEntry changes). (It's a hook bc it also contains useEffect(), listening for userEntry as a dependency.)
-  useCaretAtEnd(dominoRef, userEntry);
+  // Handle blur events by restoring focus. Either to this (single) Domino for echo, or using the central logic (if recall).
+  const [blurCount, setBlurCount] = useState(0); // so that useCaretAtEnd runs whenever handleBlur does
+  const handleBlur = () => { // Blur events are when the user tries to click elsewhere, and move the cursor elsewhere.
+    setTimeout(() => { // Using setTimeout ensures that the blur event completes before restoring focus.
+      if (dominoPointer.echoOrRecall === 'echo' && dominoRef.current) {
+        dominoRef.current.focus();
+      }
+      else if (dominoPointer.echoOrRecall === 'recall') {
+        props.restoreFocus();
+      };
+      setBlurCount((prev) => prev + 1); // Increment blurCount each blur event
+    }, 0);
+  };
+
+  // Another custom hook: automatically place caret at the end of the userEntry string. (It's a hook bc it also contains useEffect(), listening for userEntry as a dependency.)
+  useCaretAtEnd(dominoRef, userEntry, blurCount, //  (on mount, when userEntry changes, and whenever handleBlur fires).
+    dominoPointer.echoOrRecall, dominoPointer.focused); // (Only when the domino's focused).
 
   // Conditionally hide the grey remainderString & linting (for recall dominoes, if their leftOrRight === 'rightHalf' && thisPairIsReinforcement === false). (&& returns a boolean.) Echo dominoes don't have either of those keys, so they'll return values of 'undefined', which makes the && return false. Good.
   // hideGreyRed's a local variable. It'll be created anew each render cycle, derived from values in dominoPointer. That's fine.
   const hideGreyRed = (dominoPointer.leftOrRight === 'rightHalf' && dominoPointer.thisPairNeedsReinforcement === false);
+  // Note: it's also important to hide a whole pair, as pairIndex progresses. That's handled by props.hidePair.
 
   // return a contentEditable, containing: (remainderString in grey) to the right of (userEntry in black, occasionally red-highlighted).
   return (
@@ -53,57 +68,51 @@ function Domino(props) {
       contentEditable={true}
       suppressContentEditableWarning={true} // React isn't designed to manage contentEditable elements safely, and gives a warning. Don't disable this warning unless you're confident you're manually handling all updates to the DOM in the contentEditable area (including user input), & disabling the contentEditable div's desire to display its own stuff, & explicitly only showing letters which are from the react state.
       onKeyDown={boundHandleKeyDown} // this gives the REFERENCE to the function. Otherwise, onKeyDown={boundHandleKeyDown()} immediately evaluates the function, and doesn't respond to future onKeyDown events.
-      onMouseDown={(e) => e.preventDefault()} // Prevents cursor placement via mouse clicks
-      style={{
-        outline: '1px solid black',
-        width: '400px', // domino width
-        height: '40px',
-        display: 'flex',
-        alignItems: 'center', // vertically centered, rather than stretched (the default). align works on the cross axis.
-        flexWrap: 'nowrap', // this is the default for flexboxes; it's just here to remind me
-        overflow: 'hidden', // prevents "multiline overflow." Keeps stuff from extending outside box.
-        padding: '5px',
-        fontSize: '16px',
-        fontFamily: 'monospace',
-        cursor: 'text',
-      }}
+      onBlur={handleBlur}
+      onMouseDown={(e) => e.preventDefault()} // Prevents cursor placement via mouse clicks. Doesn't extend outside the Recall element, though, hence the need for handleBlur within the Domino.
+      className={styles.domino}
     >
-      {/* Next block is the userEntry string. Put it all in a span, because the cursor-logic involves always being within the first span. */}
-      <span>
-        {userEntry.map((t, index) => ( // iterate over the array & return a new array (of <span> react elements). // For each element in the array (t), the map function executes the code inside the arrow function (t, index) => ( ... )
-          <span
-            key={index} // The key prop is required by React when rendering lists to uniquely identify each element. // Additional use (not going on here): incrementing key, so React thinks it's a different key, & rerenders it/resets its state.
-            style={{
-              backgroundColor: hideGreyRed ? undefined : t.backgroundColor, // for rightHalf dominoes (preIDK), don't assign the red linting, even if they typed incorrectly.
-              padding: '0px',
-              margin: '0 1px',
-            }}
-          >
-            {t.char}
-          </span>
-        ))}
-      </span>
-
-      {/* Next block is the nbsp + remainderString, rendered conditionally. (Hide them if hideGreyRed === true.) */}
-      {!hideGreyRed && (
+      {/* Conditionally render the domino's contents, depending on props.hidePair (just show the contents of the currently focused pair and the preceding pair). */}
+      {!props.hidePair && (
         <span>
-          {/* if wrongChar === true, forevermore conditionally render a single space span, between the two strings. */}
-          {/* Using &nbsp; ensures a non-breaking space is explicitly rendered. (otherwise a lone space character will get ignored by browsers). Another potential solution: style={{ display: 'inlineBlock' }} for spans means their width doesn't get ignored. */}
-          {wrongChar.current === true && <span>&nbsp;</span>}
+          {/* This block is the userEntry string. Put it all in a span, because the cursor-logic involves always being within the first span of the first span. */}
+          <span>
+            {userEntry.map((t, index) => ( // iterate over the array & return a new array (of <span> react elements). // For each element in the array (t), the map function executes the code inside the arrow function (t, index) => ( ... )
+              <span
+                key={index} // The key prop is required by React when rendering lists to uniquely identify each element. // Additional use (not going on here): incrementing key, so React thinks it's a different key, & rerenders it/resets its state.
+                style={{
+                  backgroundColor: hideGreyRed ? undefined : t.backgroundColor, // for rightHalf dominoes (preIDK), don't assign the red linting, even if they typed incorrectly.
+                  padding: '0px',
+                  margin: '0 1px',
+                }}
+              >
+                {t.char}
+              </span>
+            ))}
+          </span>
 
-          {/* Next block is the grey remainderString. */}
-          {remainderString.map((t, index) => (
-            <span
-              key={index}
-              style={{
-                padding: '0px', // padding grows the element; margin adds space between elements.
-                margin: '0 1px', // 0 pixels vertical margin, 1 pixel horizontal margin
-                color: 'grey',
-              }}
-            >
-              {t.char}
+          {!hideGreyRed && (
+            <span>
+              {/* Next block is the nbsp + remainderString, rendered conditionally. (Hide them if hideGreyRed === true.) */}
+              {/* if wrongChar === true, forevermore conditionally render a single space span, between the two strings. */}
+              {/* Using &nbsp; ensures a non-breaking space is explicitly rendered. (otherwise a lone space character will get ignored by browsers). Another potential solution: style={{ display: 'inlineBlock' }} for spans means their width doesn't get ignored. */}
+              {wrongChar.current === true && <span>&nbsp;</span>}
+
+              {/* Next block is the grey remainderString. */}
+              {remainderString.map((t, index) => (
+                <span
+                  key={index}
+                  style={{
+                    padding: '0px', // padding grows the element; margin adds space between elements.
+                    margin: '0 1px', // 0 pixels vertical margin, 1 pixel horizontal margin
+                    color: 'grey',
+                  }}
+                >
+                  {t.char}
+                </span>
+              ))}
             </span>
-          ))}
+          )}
         </span>
       )}
     </div>
