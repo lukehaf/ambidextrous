@@ -62,18 +62,22 @@ export default function createTestSlice(set) {
         },
         objects: {
           one: [
-            { leftHalf: 'rake', rightHalf: 'leaves', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'leaves', rightHalf: 'stream', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'stream', rightHalf: 'bees', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'bees', rightHalf: 'hivebox', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'hivebox', rightHalf: 'mouse', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'rake', rightHalf: 'leaves', storyTime: 9, storyText: 'A pile of autumn leaves, and a little kid proudly managing to rake them together— the rake’s taller than he is.' },
+            { leftHalf: 'leaves', rightHalf: 'stream', storyTime: 7, storyText: 'A few autumn leaves, floating down the stream in a line' },
+            { leftHalf: 'stream', rightHalf: 'sandbar', storyTime: 7, storyText: 'A stream has deposited a sandbar of fresh silt, perfectly flat, like a shelf formed just a few inches above the water.' },
+            { leftHalf: 'sandbar', rightHalf: 'bees', storyTime: 14, storyText: 'The stream has deposited a sandbar of fresh silt, perfectly flat, like a shelf formed just a few inches above the water. It’s sunny there, and humid. There are bees landing, perhaps attracted by the water which wicks up through the soil. Maybe that’s the water which they carry back to their hivebox.' },
+            { leftHalf: 'bees', rightHalf: 'hivebox', storyTime: 16, storyText: 'It’s a hot day, and there are some honeybees flying back to their hivebox. It’s shaped like a white cube, painted white to reflect the summer heat. There are frames of hexagonal honeycomb hanging inside, and also some frames mostly full of young bees— that’s where the young bees live, one to a cell, until they’re old enough to fly outside the hive. Today, the older bees are bringing them water.' },
+            { leftHalf: 'hivebox', rightHalf: 'mouse', storyTime: 17, storyText: 'The beehive, now in winter, with the hexagonal comb cells full of honey. It’s cold, so the bees pack into a dense ball around just one or two of the hanging comb-frames; they metabolize honey to keep warm. There’s a mouse who realizes the bees can’t leave their warm huddle to defend the other frames of honey, and happily sets up shop in the far corner for the winter.' },
+            { leftHalf: 'mouse', rightHalf: 'sprouts', storyTime: 13, storyText: 'A row of sprouts, bright green against the black soil of a garden bed. It’s early spring, and they’re just a few inches tall. They’re snap pea sprouts, and a mouse has just found them; he hasn’t had anything green to eat all winter.' },
           ],
           two: [
-            { leftHalf: 'peas', rightHalf: 'trellis', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'trellis', rightHalf: 'fish', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'fish', rightHalf: 'coins', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'coins', rightHalf: 'flag', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
-            { leftHalf: 'flag', rightHalf: 'shoes', storyTime: 17, storyText: 'placeholder story, written in the Zustand store' },
+            { leftHalf: 'dryland', rightHalf: 'pond', storyTime: 17, storyText: 'A small pond in a ravine, surrounded by green thickets of brush. The summers are dry here, and farther up the banks of the pond there is only dry grass, golden & sunbleached.' },
+            { leftHalf: 'pond', rightHalf: 'bamboo', storyTime: 17, storyText: 'The bamboo thicket grows right up to the edge of the pond. Years ago, the groundskeepers planted it in the ravine around the pond, since they saw how well the other varieties of brush have been doing. The bamboo’s been thriving there over since, and helps keep the pond shaded.' },
+            { leftHalf: 'bamboo', rightHalf: 'stakes', storyTime: 17, storyText: 'A bamboo thicket, about 12 feet tall, dense and impenetrable. Each year during summertime, the groundskeepers cut back a section of the thicket to make bamboo stakes. First they set it all in piles to dry out over the summer, and later they’ll turn it all into bamboo stakes. (Stakes can be stuck in the ground next to other plants, and help support them as they grow.)' },
+            { leftHalf: 'stakes', rightHalf: 'treehouse', storyTime: 17, storyText: 'The kids playing treehouse tag want to make it easier to sneak up on the treehouse. Over the course of the summer they drag big piles of the (slowly drying) bamboo stakes over towards the treehouse, into half-woven shelters and hiding places.' },
+            { leftHalf: 'treehouse', rightHalf: 'tag', storyTime: 17, storyText: 'A group of kids came up with a game they love to play called “treehouse tag”. One kid guards the tree, and the others try to sneak past the guard and tag it. There’s also a treehouse way up in the branches, where the guard’s partner (the “lookout”) can get a better view of the surroundings and yell out if there’s anyone trying to sneak up. Together they defend the tree, and switch off now and then so the guard doesn’t get tired.' },
+            { leftHalf: 'tag', rightHalf: 'coins', storyTime: 17, storyText: 'Treehouse tag was getting boring; it was kind of a stalemate, since it was so easy for the guard and the lookout to defend the tree. So the other kids made a new rule: the guard has to go out and try to tag the other kids first, and if they get caught they have to go jump into the fountain and bring back a coin. That makes the guard and the lookout want to try to tag as many of the kids as possible— either so they can get a bunch of coins and have enough to buy bubblegum (but get bad luck), or so they can get ALL the good luck from the coins by getting to throw them back into the fountain. The other kids like the new rule too, since it makes it easier to tag the tree because the guard’s always getting lured away. If someone tags it, they get to be the new guard and pick a friend as the lookout, and share the growing pile of coins so long as the new pair can defend them.' },
+            { leftHalf: 'coins', rightHalf: 'fountain', storyTime: 17, storyText: 'A fountain in the middle of a pool. The pool is aboveground at about knee height, with beautiful rockwork sides made from interlocking stones, stacked and mortared together. They form a bench at the perfect height for sitting; the mist from the fountain is at your back, and your feet are still on the gravel path. The bottom of the fountain is covered in coins: mostly pennies, dimes, and quarters. People toss them in for good luck, and the koi fish don’t seem to mind.' },
           ],
         },
       },
@@ -95,7 +99,7 @@ export default function createTestSlice(set) {
         listHalf: null,
         echoOrRecall: null,
         // this array contains the counterbalanced order (of screens) for this participant. Eg names1 names2 objects1 objects2.
-        screenIndex: 1, // increments along the array. The value is sent to whichScreen.
+        screenIndex: 9, // increments along the array. The value is sent to whichScreen.
         screenArray: ((nthParticipant) => {
           // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
           const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
@@ -353,6 +357,7 @@ export default function createTestSlice(set) {
         ctb.screenIndex++;
         draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[ctb.screenIndex];
       }
+      window.scrollTo(0, 0);
     }, false, 'nextScreen'),
 
     //////////////////////////////////////////////////////////////////

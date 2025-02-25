@@ -1,5 +1,5 @@
 // domino_logic.jsx
-import { useEffect } from 'react'; // for my custom useDominoFocus hook
+import { useEffect, useState } from 'react'; // for my custom useDominoFocus hook
 
 export const initializeRemainderString = (targetPair, dominoPointer) => {
   // dominoPointer contains two keys for specifying display type:
@@ -117,16 +117,23 @@ export const handleKeyDown = (e, // "e" is the event.
   }
 };
 
-// a custom hook I made, for handling focus, bc I wanted to use useEffect inside a function (but you can't do that; you have to create a "custom hook" instead).
-export const useDominoFocus = (
+// a custom hook I made, for handling initial focus (and centrally-managed whichFocus changes, for Recall)
+// It's a hook bc I wanted to use useEffect inside a function (but you can't do that; you have to create a "custom hook" instead).
+export const useDominoFocus = (dominoRef, // begins null; points to the DOM object once it exists. useEffect ensures that .focus() doesn't try to run before the DOM is ready.
   echoOrRecall, // echo has one domino, which auto-focuses. Recall has 10 dominoes.
-  focused, // One of the recall dominoes has focused === true, in which case its dominoRef is passed to the centralized focus manager. (focused === undefined for echo; the key doesn't exist.)
-  dominoRef, // begins null; points to the DOM object once it exists. useEffect ensures that .focus() doesn't try to run before the DOM is ready.
-  dominoRefToFocus,
+  namesOrObjects, storyTime, // Echo: if it's an objects pair, delay focus by storyTime.
+  focused, dominoRefToFocus, // Recall: one of the recall dominoes has focused === true, in which case its dominoRef is passed to the centralized focus manager. (focused === undefined for echo; the key doesn't exist.)
 ) => {
   useEffect(() => { // echo just needs to be auto-focused
     if (dominoRef.current && echoOrRecall === 'echo') { // Why check that dominoRef.current is no longer null? It should be unnecessary. useEffect only runs after the DOM is updated (which populates dominoRef with a DOM element). But it's better to have my web app fail to focus than utterly crash. (they could still click the home button, and go back there.)
-      dominoRef.current.focus(); //                     // DEFENSIVE PROGRAMMING: it would be nice to have a "home" button and "emergency submit" and "resume later", and login capabilities, so they can reload their progress. But, I guess I can start running the test, and close it to additional participants if >1 person has website-crash issues...
+      if (namesOrObjects === 'names') {
+        dominoRef.current.focus(); //                     // DEFENSIVE PROGRAMMING: it would be nice to have a "home" button and "emergency submit" and "resume later", and login capabilities, so they can reload their progress. But, I guess I can start running the test, and close it to additional participants if >1 person has website-crash issues...
+      }
+      else if (namesOrObjects === 'objects') {
+        setTimeout(() => {
+          dominoRef.current.focus();
+        }, storyTime * 1000);
+      }
     }
   }, []);
 
@@ -137,14 +144,27 @@ export const useDominoFocus = (
   }, [focused]); // dependency array: run useEffect whenever focused changes (and once on mount, of course, just like for a [] dependency array)
 };
 
-// Automatically place caret at the end of the userEntry string (on mount and when userEntry changes, or upon blur events). (It's another custom hook, since it also contains useEffect().)
-export const useCaretAtEnd = (dominoRef, userEntry, blurCount, // dominoRef points to the DOM object (whose caret we're interested in.) // userEntry & blurCount are the dependencies; just listen for when either changes.
-  echoOrRecall, focused) => { // only place caret if this Domino's focused.
+// Automatically place caret at the end of the userEntry string. (Another custom hook, since it also contains useEffect.)
+export const useCaretAtEnd = (dominoRef, userEntry, blurCount, // dominoRef points to the DOM object (whose caret we're interested in.) // userEntry & blurCount: just dependencies, not otherwise used.
+  echoOrRecall, focused, namesOrObjects, storyTime) => { // For Recall phase, make sure this domino's focusable. For EchoObjects, delay Caret by storytime, since placing Caret on mount happens to focus the Domino and enable early typing.
+  // Gate caret placement until storyTime has elapsed. (only for EchoObjects).
+  const [storyTimeElapsed, setStoryTimeElapsed] = useState(false);
   useEffect(() => {
-    if (dominoRef.current && (echoOrRecall === 'echo' || (echoOrRecall === 'recall' && focused))) { // If hidePair were true, there'd be no spans to place the focus within.
-      placeCaretAtEnd(dominoRef.current);
+    if ((echoOrRecall === 'recall' && focused) // Handle Recall. Only place caret if this is the focused Domino.
+      || (echoOrRecall === 'echo' && (namesOrObjects === 'names' || storyTimeElapsed))) { // Handle EchoNames. EchoObjects is allowed too, but only after storyTime has elapsed.
+      if (dominoRef.current) {
+        placeCaretAtEnd(dominoRef.current);
+      }
     }
-  }, [userEntry, blurCount]); // Dependency-- listen for when userEntry changes
+    else if (echoOrRecall === 'echo' && namesOrObjects === 'objects' && !storyTimeElapsed) { // Handle EchoObjects, BEFORE storyTime has elapsed
+      setTimeout(() => {
+        setStoryTimeElapsed(true); // Now EchoObjects is ungated; future calls go straight through, no setTimeout involved. // Doesn't look like the setTimeout gets called twice, for instance by clicking around before the storyTime has elapsed, to try to trigger a blur event. I guess a blur event involves losing focus, which implies having had it in the first place.
+        if (dominoRef.current) {
+          placeCaretAtEnd(dominoRef.current);
+        }
+      }, storyTime * 1000);
+    }
+  }, [userEntry, blurCount]); // Dependencies: run useCaretAtEnd on mount, when userEntry changes, and upon blur events).
 
   // Function for keeping caret at end of userEntry string, as they type
   const placeCaretAtEnd = (dominoElement) => {

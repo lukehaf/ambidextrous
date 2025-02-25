@@ -1,8 +1,9 @@
 body, html {
     font-family: "Roboto", sans-serif;
-    background: linear-gradient(to bottom, #87e0fd 0%,#53cbf1 40%,#05abe0 100%);
-    height: 100%;
-  }
+    background: linear-gradient(to bottom, #87e0fd 0%, #53cbf1 40%, #05abe0 100%);
+    min-height: 100vh; /* Ensures the background covers at least the full viewport */
+    background-attachment: fixed; /* Optional: prevents background from scrolling */
+}
 
 :root {
   text-size-adjust: 100%;

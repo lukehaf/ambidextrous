@@ -34,8 +34,9 @@ function Domino(props) {
   const dominoRef = useRef(null);
 
   // a custom hook I made, for handling initial focus (and centrally-managed whichFocus changes, for Recall)
-  useDominoFocus(dominoPointer.echoOrRecall, // echo has one domino, which auto-focuses. Recall has 10 dominoes.
-    dominoPointer.focused, dominoRef, props.dominoRefToFocus); // One of the recall dominoes has focused === true, in which case its dominoRef is passed to the centralized focus manager. (focused === undefined for echo; the key doesn't exist.)
+  useDominoFocus(dominoRef, dominoPointer.echoOrRecall, // echo has one domino, which auto-focuses. Recall has 10 dominoes.
+    dominoPointer.namesOrObjects, props.storyTime, // Echo: for objects, delay focus by storyTime
+    dominoPointer.focused, props.dominoRefToFocus); // Recall: One of the recall dominoes has focused === true, in which case its dominoRef is passed to the centralized focus manager. (focused === undefined for echo; the key doesn't exist.)
 
   // Handle blur events by restoring focus. Either to this (single) Domino for echo, or using the central logic (if recall).
   const [blurCount, setBlurCount] = useState(0); // so that useCaretAtEnd runs whenever handleBlur does
@@ -53,7 +54,7 @@ function Domino(props) {
 
   // Another custom hook: automatically place caret at the end of the userEntry string. (It's a hook bc it also contains useEffect(), listening for userEntry as a dependency.)
   useCaretAtEnd(dominoRef, userEntry, blurCount, //  (on mount, when userEntry changes, and whenever handleBlur fires).
-    dominoPointer.echoOrRecall, dominoPointer.focused); // (Only when the domino's focused).
+    dominoPointer.echoOrRecall, dominoPointer.focused, dominoPointer.namesOrObjects, props.storyTime); // (Recall: only when the domino's focused. Echo: for objects, delay by storyTime.)
 
   // Conditionally hide the grey remainderString & linting (for recall dominoes, if their leftOrRight === 'rightHalf' && thisPairIsReinforcement === false). (&& returns a boolean.) Echo dominoes don't have either of those keys, so they'll return values of 'undefined', which makes the && return false. Good.
   // hideGreyRed's a local variable. It'll be created anew each render cycle, derived from values in dominoPointer. That's fine.
@@ -70,7 +71,7 @@ function Domino(props) {
       onKeyDown={boundHandleKeyDown} // this gives the REFERENCE to the function. Otherwise, onKeyDown={boundHandleKeyDown()} immediately evaluates the function, and doesn't respond to future onKeyDown events.
       onBlur={handleBlur}
       onMouseDown={(e) => e.preventDefault()} // Prevents cursor placement via mouse clicks. Doesn't extend outside the Recall element, though, hence the need for handleBlur within the Domino.
-      className={styles.domino}
+      className={styles[dominoPointer.echoOrRecall === 'recall' ? 'domino' : 'domino_wide']} // another way to do it, using template literals: className={`${dominoPointer.echoOrRecall === 'recall' ? styles.domino : styles.domino_wide}`}
     >
       {/* Conditionally render the domino's contents, depending on props.hidePair (just show the contents of the currently focused pair and the preceding pair). */}
       {!props.hidePair && (

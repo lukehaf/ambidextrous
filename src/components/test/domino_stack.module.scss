@@ -1,4 +1,4 @@
-$domino-width: 100px;
+$domino-width: 100px; // this default width is for recall, handling single words
 $IDK-width: 40px;
 $vertical-dominoes: 5;
 $horizontal-dominoes: 6;
@@ -36,6 +36,11 @@ $horizontal-dominoes: 6;
     align-items: center; // vertically centered, rather than stretched (the default). align works on the cross axis.
     flex-wrap: nowrap; // this is the default for flexboxes; it's just here to remind me
     overflow: hidden; // prevents "multiline overflow." Keeps stuff from extending outside box.
+
+    &_wide {
+        @extend .domino;
+        width: 2 * $domino-width - 2 * 5px;
+    }
 
 }
 .buttonIDK {

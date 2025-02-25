@@ -3,7 +3,7 @@
 // names-bar is green, quick, and has the same duration for each name.
 // objects-bar is purple, slower, with a varying duration (specified for each object-pair.)
 .progressContainer {
-    width: 500px;
+    width: 100%;
     height: 20px;
     background: rgb(221, 222, 222);
     border-radius: 5px;
@@ -11,10 +11,10 @@
 
 .progressBar {
     height: 100%;
-    width: 50%;
+    width: 100%;
     border-radius: 5px;
     animation-name: shrink; // here's what the keyframes animation is called
-    animation-duration: 3s;  // default. Name-pairs use the default. Object-pairs have custom durations, much longer than 3s, since it's for a story (not for typing). Objects they can type it as slowly as they want.
+    // animation-duration: EchoNames passes a constant 4s. Object-pairs have custom durations, much longer than 3s, since it's for a story (not for typing). Object-pairs can be typed as slowly as they want.
     animation-fill-mode: forwards; // makes the last frame of the animation persist after 3s
 
     &_names {
@@ -23,7 +23,7 @@
     }
     &_objects {
         @extend .progressBar;
-        background: rgb(156, 83, 174);
+        background: rgb(188, 127, 204);
     }
     
 }
@@ -39,8 +39,8 @@
 .delayDomino {
     opacity: 0;
     animation-name: showDomino;
-    animation-delay: 2s; // default
-    animation-duration: 2s; // default
+    // animation-delay: depends on the object-pair. // storyTime -2 (allows the 2 s for the Domino to fade in)
+    animation-duration: 2s; // Domino takes 2s to fade in
     animation-fill-mode: forwards;
 }
 
