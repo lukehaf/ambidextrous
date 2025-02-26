@@ -68,6 +68,7 @@ function Domino(props) {
       tabIndex={-1} // Make div only focusable programmatically
       contentEditable={true}
       suppressContentEditableWarning={true} // React isn't designed to manage contentEditable elements safely, and gives a warning. Don't disable this warning unless you're confident you're manually handling all updates to the DOM in the contentEditable area (including user input), & disabling the contentEditable div's desire to display its own stuff, & explicitly only showing letters which are from the react state.
+      spellCheck={false}
       onKeyDown={boundHandleKeyDown} // this gives the REFERENCE to the function. Otherwise, onKeyDown={boundHandleKeyDown()} immediately evaluates the function, and doesn't respond to future onKeyDown events.
       onBlur={handleBlur}
       onMouseDown={(e) => e.preventDefault()} // Prevents cursor placement via mouse clicks. Doesn't extend outside the Recall element, though, hence the need for handleBlur within the Domino.
