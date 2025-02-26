@@ -8,7 +8,7 @@ import Domino from './domino.jsx';
 // objects-pair timebar is purple, slower, with a varying duration (specified for each object-pair), so that participants spend sufficient time with each story. They can type as slowly as they like.
 const ProgressBar = (props) => { // props.duration, passed by Echo component
   return (
-    <div className={styles.progressContainer}>
+    <div className={styles.progressContainer_objects}>
       <div className={styles.progressBar_objects} style={{ animationDuration: `${props.duration}s` }} />
     </div>
   );

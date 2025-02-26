@@ -60,7 +60,7 @@ export const incrementKeys = {
           if ((ptr.pairIndex += 2) < HARD.objects.dominoHeight) return;
           ptr.pairIndex = 0; // no break needed, since there are no further cases to fall-through onto
       }
-      if (++ptr.lap < HARD.names.lapsEcho) return;
+      if (++ptr.lap < HARD.objects.lapsEcho) return;
 
       // reset everything to null; this 8th's complete
       ptr.lap = null;
@@ -85,6 +85,7 @@ export const incrementKeys = {
 
     const { whichFocus } = draftState.testSlice.currentScreen; // this is the stale whichFocus, in need of incrementation
     const oldDominosLap = draftState.testSlice.currentScreen.recall_dominoPointers[whichFocus.pairIndex][whichFocus.leftOrRight].lap; // to see if lap needs incrementation
+    const { namesOrObjects } = draftState.testSlice.currentScreen.counterbalanced;
 
     // increment leftOrRight
     if (whichFocus.leftOrRight === 'leftHalf') {
@@ -94,14 +95,14 @@ export const incrementKeys = {
       whichFocus.leftOrRight = 'leftHalf';
 
       // increment pairIndex
-      if (whichFocus.pairIndex + 1 < ((HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects are different heights'), 0))) {
+      if (whichFocus.pairIndex + 1 < HARD[namesOrObjects].dominoHeight) {
         whichFocus.pairIndex++;
       }
-      else if (whichFocus.pairIndex + 1 >= ((HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects are different heights'), 0))) {
+      else if (whichFocus.pairIndex + 1 >= HARD[namesOrObjects].dominoHeight) {
         whichFocus.pairIndex = 0;
 
         // increment lap, or if they're all out of laps, move on to the next instructions screen.
-        if (oldDominosLap + 1 < ((HARD.names.lapsRecall === HARD.objects.lapsRecall) ? HARD.names.lapsRecall : (console.error('HARD.names & HARD.objects have different lapsRecall'), 0))) { // A NEW LAP IS BEGUN. increment lap for all recall_dominoPointers, reset all recallPointer.dominoResetKeys, and increment recallPointer.stackResetKey
+        if (oldDominosLap + 1 < HARD[namesOrObjects].lapsRecall) { // A NEW LAP IS BEGUN. increment lap for all recall_dominoPointers, reset all recallPointer.dominoResetKeys, and increment recallPointer.stackResetKey
           // Increment lap in all the recall_dominoPointers (they need it for their submission-logic)
           const { recall_dominoPointers } = draftState.testSlice.currentScreen;
           recall_dominoPointers.forEach((_, pairIndex) => { // .forEach operates upon arrays
@@ -121,7 +122,7 @@ export const incrementKeys = {
           // Increment recallPointer.stackResetKey
           draftState.testSlice.currentScreen.recallPointer.stackResetKey++; // it's an integer. Always has same value as lap. Initialized to 0 for each 8th of the test.
         }
-        else if (oldDominosLap + 1 >= ((HARD.names.lapsRecall === HARD.objects.lapsRecall) ? HARD.names.lapsRecall : (console.error('HARD.names & HARD.objects have different lapsRecall'), 0))) { // ALL LAPS ARE COMPLETE. // currentScreen's time, whichFocus, and attempt are nulled; its counterbalanced & whichScreen are incremented; its recallPointer (comprised of reset keys) is nulled; and its recall_dominoPointers are nulled.
+        else if (oldDominosLap + 1 >= HARD[namesOrObjects].lapsRecall) { // ALL LAPS ARE COMPLETE. // currentScreen's time, whichFocus, and attempt are nulled; its counterbalanced & whichScreen are incremented; its recallPointer (comprised of reset keys) is nulled; and its recall_dominoPointers are nulled.
           // Null the time keys; InstructionsScreen reinitializes them.
           draftState.testSlice.currentScreen.time.atPairFocus = null;
           draftState.testSlice.currentScreen.time.atLastSubmission = null;
@@ -235,6 +236,7 @@ export const derivedKeys = { // update all keys, in the order they occur in curr
 
     // recallPointer's reset keys have already been incremented (for IDK and correct)
     // // (for init, initialize all of recallPointer's reset keys:)
+    // since objects is longer than names, there are extra recall_dominoPointers during recall names. That's ok.
     if (init) {
       recallPointer.stackResetKey = 0; // it's an integer. Always has same value as lap. Initialized to 0 for each 8th of the test.
       recallPointer.dominoResetKeys.forEach((_, pairIndex) => {
@@ -245,6 +247,7 @@ export const derivedKeys = { // update all keys, in the order they occur in curr
     };
 
     // recall_dominoPointers
+    // since objects is longer than names, there are extra recall_dominoPointers during recall names. That's ok.
     if (init) {
       recall_dominoPointers.forEach((_, pairIndex) => {
         ['leftHalf', 'rightHalf'].forEach(leftOrRight => {

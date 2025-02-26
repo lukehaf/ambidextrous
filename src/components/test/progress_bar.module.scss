@@ -3,10 +3,18 @@
 // names-bar is green, quick, and has the same duration for each name.
 // objects-bar is purple, slower, with a varying duration (specified for each object-pair.)
 .progressContainer {
-    width: 100%;
     height: 20px;
     background: rgb(221, 222, 222);
     border-radius: 5px;
+
+    &_names {
+        @extend .progressContainer;
+        width: 50%;
+    }
+    &_objects {
+        @extend .progressContainer;
+        width: 100%;
+    }
 }
 
 .progressBar {

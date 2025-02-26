@@ -64,7 +64,7 @@ export default function createTestSlice(set) {
           one: [
             { leftHalf: 'rake', rightHalf: 'leaves', storyTime: 9, storyText: 'A pile of autumn leaves, and a little kid proudly managing to rake them together— the rake’s taller than he is.' },
             { leftHalf: 'leaves', rightHalf: 'stream', storyTime: 7, storyText: 'A few autumn leaves, floating down the stream in a line' },
-            { leftHalf: 'stream', rightHalf: 'sandbar', storyTime: 7, storyText: 'A stream has deposited a sandbar of fresh silt, perfectly flat, like a shelf formed just a few inches above the water.' },
+            { leftHalf: 'stream', rightHalf: 'sandbar', storyTime: 8, storyText: 'A stream has deposited a sandbar of fresh silt, perfectly flat, like a shelf formed just a few inches above the water.' },
             { leftHalf: 'sandbar', rightHalf: 'bees', storyTime: 14, storyText: 'The stream has deposited a sandbar of fresh silt, perfectly flat, like a shelf formed just a few inches above the water. It’s sunny there, and humid. There are bees landing, perhaps attracted by the water which wicks up through the soil. Maybe that’s the water which they carry back to their hivebox.' },
             { leftHalf: 'bees', rightHalf: 'hivebox', storyTime: 16, storyText: 'It’s a hot day, and there are some honeybees flying back to their hivebox. It’s shaped like a white cube, painted white to reflect the summer heat. There are frames of hexagonal honeycomb hanging inside, and also some frames mostly full of young bees— that’s where the young bees live, one to a cell, until they’re old enough to fly outside the hive. Today, the older bees are bringing them water.' },
             { leftHalf: 'hivebox', rightHalf: 'mouse', storyTime: 17, storyText: 'The beehive, now in winter, with the hexagonal comb cells full of honey. It’s cold, so the bees pack into a dense ball around just one or two of the hanging comb-frames; they metabolize honey to keep warm. There’s a mouse who realizes the bees can’t leave their warm huddle to defend the other frames of honey, and happily sets up shop in the far corner for the winter.' },
@@ -94,12 +94,12 @@ export default function createTestSlice(set) {
       attempt: null,
       // this section of currentScreen is ONLY LISTENED TO BY InstructionsScreen (and derivedKeys or newDominoResetKey?) (probably it should get relabeled as a pointer.). incrementKeys advances screenIndex (and updates whichScreen) in the event of completing an 8th of the test, but should not re-null anything. InstructionsScreen wants to know what just got completed, before updating them (upon click of nextScreen button).
       counterbalanced: {
-        // these three keys are incremented by incrementKeys, to indicate the current eighth of the test. DON'T null them upon completing each 8th; InstructionsScreen needs them, to know the prior 8th.
+        // these three keys are static from the viewpoint of incrementKeys, and indicates the current eighth of the test. DON'T null them upon completing each 8th; InstructionsScreen needs them, to know the prior 8th.
         namesOrObjects: null,
         listHalf: null,
         echoOrRecall: null,
         // this array contains the counterbalanced order (of screens) for this participant. Eg names1 names2 objects1 objects2.
-        screenIndex: 9, // increments along the array. The value is sent to whichScreen.
+        screenIndex: 0, // increments along the array. The value is sent to whichScreen. Incremented by incrementKeys
         screenArray: ((nthParticipant) => {
           // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
           const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
@@ -152,7 +152,7 @@ export default function createTestSlice(set) {
       // Each <component>Pointer contains pointers & display-state:
       // // // Pointers: subset `presentables` and `results`; (this clears out ugly array-sifting logic from the components). (Naming-rule: append "pointer" to a state-object's name whenever its purpose is to subset 'presentables' or 'results'.)
       // // // Display-state: (WOULD be feasible to calculate within the component, via pointers/presentables/results). HOWEVER, it's another opportunity to declutter/hide logic, just like the pointers allow.
-      whichScreen: 'SpecificInstructions',
+      whichScreen: 'GeneralInstructions',
       echoPointer: { // listened to by the EchoNames component and the EchoObjects component
         // EchoNames and EchoObjects listens to a reset key, which resets both their Domino and timebar
         dominoResetKey: null,
@@ -174,16 +174,16 @@ export default function createTestSlice(set) {
         stackResetKey: null, // stackResetKey is an integer, and coincidentally always has the same value as lap. Nulled upon completion of 1/8th the test. Reinitialized to 0 by InstructionsScreen in preparation for next 1/8th.
         dominoResetKeys: // Initialized to be dominoStackHeight long, and be made of objects with leftHalf & rightHalf
         Array.from(
-          { length: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects have different dominoHeight'), 0) }, // an array of length dominoHeightNames = 5. The ternary's just to check whether I'm still using = 5 for both names and objects
+          { length: Math.max(HARD.names.dominoHeight, HARD.objects.dominoHeight) }, // an array of length dominoHeight = 5 or 7. For names, there will be 2 extra dominoResetKeys, whose pairIndex is never incremented into by whichFocus, and thus never used. They're initialized by derivedKeys and nulled by incrementKeys all the same.
           // 2nd argument: a mapping function, to create the entries in the array. Here, each one's an object (with a leftHalf and rightHalf).
           () => Object.fromEntries( // expects an array of [key, value] pairs (which can be assembled into an object). Create that array using map.
             ['leftHalf', 'rightHalf'].map(key => [key, null]),
           )),
-        dominoStackHeight: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects have different dominoHeight'), 0), // I'm currently assuming both lists have the same # of pairs, and that only one recallPointer is needed. (Or, I could have a setter, which is called by get() whenever objects changes to names)
+        dominoStackHeight: { names: HARD.names.dominoHeight, objects: HARD.objects.dominoHeight }, // dominoHeight = 5 or 7.
       },
       recall_dominoPointers: // listened to by the Domino components (that render inside a Recall component). Contains 10 pointers-- one for each domino.
       Array.from(
-        { length: (HARD.names.dominoHeight === HARD.objects.dominoHeight) ? HARD.names.dominoHeight : (console.error('HARD.names & HARD.objects have different dominoHeight'), 0) }, // an array of length dominoHeightNames = 5. The ternary's just to check whether I'm still using = 5 for both names and objects
+        { length: Math.max(HARD.names.dominoHeight, HARD.objects.dominoHeight) }, // an array of length dominoHeight = 5 or 7. For names, there will be 2 extra recall_dominoPointers, whose pairIndex is never incremented into by whichFocus, and thus never used. They're initialized by derivedKeys and nulled by incrementKeys all the same.
         (_, pairIndex) => // Make pairIndex available (for dynamic use, initializing each dominoPointer). // The mapping function's 1st argument is _, unutilized here. The 2nd argument is the index of the array, which you can name whatever you like (for instance, pairIndex).
           Object.fromEntries( // expects an array of [key, value] pairs (which can be assembled into an object). Create that array using map.
             ['leftHalf', 'rightHalf'].map(key => [key, { // map takes an array of keys, and returns an array of [key, value] arrays. The value (the actual dominoPointer structure) is the following object:
@@ -359,6 +359,12 @@ export default function createTestSlice(set) {
       }
       window.scrollTo(0, 0);
     }, false, 'nextScreen'),
+    sandboxShortcutTo: (screenIndex) => set((draftState) => {
+      const { currentScreen } = draftState.testSlice;
+      currentScreen.counterbalanced.screenIndex = screenIndex;
+      currentScreen.whichScreen = 'SpecificInstructions';
+      window.scrollTo(0, 0);
+    }, false, 'sandboxShortcutTo'),
 
     //////////////////////////////////////////////////////////////////
     // LEGACY CODE. GRADUALLY MOVE EVERYTHING BELOW UP INTO THE DESIRED 3 DATASTRUCTURES.

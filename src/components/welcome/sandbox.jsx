@@ -1,6 +1,6 @@
 // sandbox.jsx
 /* eslint-disable @stylistic/max-statements-per-line */
-import React from 'react';
+import React, { useState } from 'react';
 import useStore from '../../store';
 import styles from './welcome.module.scss';
 
@@ -16,6 +16,57 @@ const Sandbox = () => {
         currently it does not have a login option, and closing the test would unfortunately delete your progress. (The browser's refresh and back arrow buttons have also been disabled for this reason— please test that now, if you wouldn't mind. If nothing happens, proceed.)
       </p>
       <button onClick={() => { nextScreen('Test'); setSandbox(true); }} className={styles.navButton}>Begin Test in Sandbox Mode</button>
+    </div>
+  );
+};
+
+export const SandboxShortcuts = () => {
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const sandboxShortcutTo = useStore((state) => state.testSlice.sandboxShortcutTo);
+  return (
+    <div>
+      <br />
+      <button
+        className={styles.navButton}
+        onClick={() => {
+          setShowShortcuts((prev) => !prev);
+          setTimeout(() => { // Delay scrolling slightly to ensure the buttons have rendered
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }, 100);
+          console.log('scroll');
+        }}
+      >
+        {showShortcuts ? 'Hide' : 'Show'} Shortcuts
+      </button>
+      {showShortcuts && (
+        <div className={styles.container}>
+          <h2 className={styles.subtitle}>Shortcuts through test</h2>
+          <p>(only available for Sandbox Mode)</p>
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(1)}>Echo Names1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(3)}>Recall Names1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(5)}>Echo Names2</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(7)}>Recall Names2</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(9)}>Echo Objects1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(11)}>Recall Objects1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(13)}>Echo Objects2</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => sandboxShortcutTo(15)}>Recall Objects2</button>
+          <br />
+        </div>
+      )}
     </div>
   );
 };

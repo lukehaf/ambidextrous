@@ -23,7 +23,7 @@ const SpecificInstructions = () => {
       <p className={styles.greyText}>
         I would love some help with the verbiage here. I need 4 versions: EchoNames, RecallNames, EchoObjects, RecallObjects. Just one of them will be rendered onscreen at a time.
       </p>
-      <p>Echo for Names is like flashcards; it will give you 2 laps of practice through all 5 pairs of names, and 2 reps per pair. (It moves on to the next pair after you type the first pair correctly twice). A progress bar shows how much time you have. (If you miss the progress bar, it is no big deal; you will just have to type it again.) The order of the 5 pairs is helpful; it's the order you will have to recall them in.</p>
+      <p>Echo for Names is like flashcards; it will give you 2 laps of practice through all 5 pairs of names, and 2 reps per pair. (It moves on to the next pair after you type the first pair correctly twice). The green progressbar just encourages you to type quickly, but if you miss the progressbar it is no big deal (you will just have to type it again). The order of the 5 pairs is helpful; it's the order you will have to recall them in.</p>
       <p>Recall for Names is the quiz for the names you just learned. It gives you 3 laps (3 chances to recall the whole list), with corrections provided, so that your accuracy can hopefully reach 100% by the second and third laps. Best of luck!</p>
       <p>Echo for Objects involves stories; I want to give them a little Intro Paragraph about this. They’re imagining a zen garden/arboretum; scenes from a zen garden, or arboretum, with more wild-growing little sections of bushes & trees, situated in a little wild park by the river; There’s trickling water— some sections carefully/artfully maintained, situated between sections which are left to grow more wild. There are little paths that branch through the park, and you can’t see from one end to the other. It invites exploring. The park is oriented towards families-- it's a good place for families to bring their kids, with lots of things for kids to explore, from the city who don’t normally get to. Everything from parks/places to run/hide and seek, to places where kids can learn about how some different plants and crops are grown. (Community garden with teaching days). No livestock, but there is a beehive, tended by someone who keeps bees as a hobby. Participants only get one lap and one rep of practice per pair of words.</p>
       <p>Recall for objects is a quiz for the zen-garden/arboretum-related objects & scenes. It gives you 3 laps (3 chances to recall the whole list), with corrections provided, so that your accuracy can hopefully reach 100% by the second and third laps. Best of luck! If you can't recall the exact word, just type a similar one. For instance, "dirt" would be awarded partial credit if the correct answer were "soil".</p>
@@ -42,9 +42,9 @@ const SpecificInstructions = () => {
         <div className={styles.navbar_right}>
           <button onClick={nextScreen} className={styles.navButton}>Next Screen</button>
         </div>
-        { /* conditionally render <GeneralInstructions /> */}
-        {showGeneral && <GeneralInstructionsText />}
       </div>
+      { /* conditionally render <GeneralInstructions /> */}
+      {showGeneral && <GeneralInstructionsText />}
     </div>
   );
 };

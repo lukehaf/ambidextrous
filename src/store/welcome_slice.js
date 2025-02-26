@@ -15,8 +15,6 @@ export default function createWelcomeSlice(set) {
       set((draftState) => { draftState.welcomeSlice.currentScreen = screen; }, false, 'nextScreen');
       window.scrollTo(0, 0); // not a soft scroll; it jumps there. But for this, that's fine
     },
-    /////////////////////////////////////////////////
-    // there are two onboarding paths which should set this true. Make sure both work
     sandbox: null,
     setSandbox: (boolean) => set((draftState) => { draftState.welcomeSlice.sandbox = boolean; }, false, 'setSandbox'),
   };

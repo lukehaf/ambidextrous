@@ -10,13 +10,14 @@ import '../style.scss';
 
 import Welcome from './welcome/welcome.jsx';
 import Onboarding from './welcome/onboarding.jsx';
-import Sandbox from './welcome/sandbox.jsx';
+import Sandbox, { SandboxShortcuts } from './welcome/sandbox.jsx';
 import FirstAttempt from './welcome/first_attempt.jsx';
 import Test from './test/test.jsx';
 
 // (props) might be needed here, IDK. Everything I write, though, uses zustand hooks rather than props.
 function App(props) {
   const currentScreen = useStore(({ welcomeSlice }) => welcomeSlice.currentScreen);
+  const sandbox = useStore(({ welcomeSlice }) => welcomeSlice.sandbox);
   return (
     <div>
       {currentScreen === 'Welcome' && <Welcome />}
@@ -24,6 +25,7 @@ function App(props) {
       {currentScreen === 'Sandbox' && <Sandbox />}
       {currentScreen === 'FirstAttempt' && <FirstAttempt />}
       {currentScreen === 'Test' && <Test />}
+      {sandbox && <SandboxShortcuts />}
     </div>
   );
 };
