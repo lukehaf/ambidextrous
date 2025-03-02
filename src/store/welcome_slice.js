@@ -1,6 +1,7 @@
 // welcome_slice.js
 /* eslint-disable @stylistic/max-statements-per-line */
 import axios from 'axios';
+const ROOT_URL = 'https://ambi-server.onrender.com/api';
 
 export default function createWelcomeSlice(set, get) {
   return {
@@ -19,7 +20,7 @@ export default function createWelcomeSlice(set, get) {
       noID: async () => {
         try { // create an nthParticipant in the server using axios, and return the nthParticipant #
           // curl -X POST "http://localhost:9090/api/nth/no-ID" worked for testing! returned {"_id":"67c3e102cfdde460ac9fbed3","createdAt":"2025-03-02T04:39:30.401Z","updatedAt":"2025-03-02T04:39:30.401Z","nthParticipant":2,"__v":0,"id":"67c3e102cfdde460ac9fbed3"}
-          const response = await axios.post('http://localhost:9090/api/nth/no-ID'); // (`${ROOT_URL}/nth/no-ID`);
+          const response = await axios.post(`${ROOT_URL}/nth/no-ID`); // ('https://ambi-server.onrender.com/api/nth/no-ID'); // ('http://localhost:9090/api/nth/no-ID')
           const nthParticipant = response.data.nthParticipant;
           get().testSlice.initCounterbal({ nth: nthParticipant }); // As a response, I'm having this route return the actual document that was saved. Perfect! It's an object with a key called nthParticipant.
           get().testSlice.setNthParticipant(nthParticipant);
