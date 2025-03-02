@@ -7,7 +7,6 @@ import EchoObjects from './echo_objects.jsx';
 import Recall from './recall.jsx';
 import Results from '../results/results.jsx';
 
-import { GeneralInstructions } from '../verbiage/general_instructions.jsx';
 import SpecificInstructions from '../verbiage/specific_instructions.jsx';
 import SelfReport from '../verbiage/self_report.jsx';
 
@@ -15,7 +14,6 @@ function Test() {
   const currentScreenTest = useStore(({ testSlice }) => testSlice.currentScreen.whichScreen);
   return (
     <div>
-      {currentScreenTest === 'GeneralInstructions' && <GeneralInstructions />}
       {currentScreenTest === 'SpecificInstructions' && <SpecificInstructions />}
       {currentScreenTest === 'EchoNames' && <EchoNames />}
       {currentScreenTest === 'EchoObjects' && <EchoObjects />}

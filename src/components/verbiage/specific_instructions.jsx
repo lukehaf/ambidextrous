@@ -4,11 +4,12 @@ import useStore from '../../store/index.js';
 
 import styles from '../welcome/welcome.module.scss';
 
-import { GeneralInstructionsText } from './general_instructions.jsx';
+import { GeneralInstructionsText } from '../welcome/general_instructions.jsx';
 
 const SpecificInstructions = () => {
   const [showGeneral, setShowGeneral] = useState(false);
   const nextScreen = useStore(({ testSlice }) => testSlice.nextScreen);
+  const allowNextScreen = useStore(({ testSlice }) => testSlice.currentScreen.counterbalanced.initialized);
 
   return (
     <div className={styles.container}>
@@ -40,7 +41,17 @@ const SpecificInstructions = () => {
           </button>
         </div>
         <div className={styles.navbar_right}>
-          <button onClick={nextScreen} className={styles.navButton}>Next Screen</button>
+          { /* conditionally disable the <SpecificInstructions /> Next Screen button, once initializeCounterbal has run (an async process, which for non beta testers requires getting nthParticipant from server) */}
+          {!allowNextScreen && (
+            <div style={{ display: 'flex' }} // places the button and text side by side
+            >
+              <button disabled>Next Screen</button>
+              <div style={{ color: 'red' }}>Still waiting for server. If this takes more than a few seconds, email Luke</div>
+            </div>
+          )}
+          {allowNextScreen && (
+            <button onClick={nextScreen} className={styles.navButton}>Next Screen</button>
+          )}
         </div>
       </div>
       { /* conditionally render <GeneralInstructions /> */}

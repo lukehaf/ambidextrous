@@ -24,22 +24,22 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.3",
-    "sass": "^1.83.0", 
+    "sass": "^1.83.0",
     "vite": "^6.0.6",
     "vite-plugin-eslint": "^1.8.1"
   },
   "type": "module",
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "axios": "^1.7.9",
+    "axios": "^1.8.1",
     "immer": "^10.1.1",
     "lodash.debounce": "^4.0.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.1.1",
     "react-router-dom": "^7.1.1",
+    "react-toastify": "^11.0.5",
     "zustand": "^5.0.2"
   },
   "comment2": "sass, as installed by npm, is a distribution of dart-sass, which (doesn't run into @import problems). Those were caused by node-sass, a different css preprocessor which is now deprecated."
 }
-

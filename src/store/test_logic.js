@@ -4,7 +4,7 @@
 export const HARD = { // the function requires some hardcoded lengths
   names: { lapsEcho: 2, repsEcho: 2, lapsRecall: 3, dominoHeight: 5 }, // For createQuarterResults(names). also used by currentScreen and updateScreen()
   objects: { lapsEcho: 1, repsEcho: 1, lapsRecall: 3, dominoHeight: 7 }, // For createQuarterResults(objects). also used by currentScreen and updateScreen()
-  nthParticipant: 0 };
+};
 
 // This non-set()-wrapped function mutates the incrementable keys in (draftState..echo_dominoPointer) or (draftState..recallPointer & draftState..recall_dominoPointers).
 // It's called synchronously as the penultimate line of setCorrect (once the prior lines have slaked their need for currentScreen.<dominoPointer>'s unmodified base state). Synchronousness (making updateScreen a helper function within a setter, rather than in independent setter) matters since Zustand doesn't guarantee the order of execution for two setters called during the same render cycle of a React component.

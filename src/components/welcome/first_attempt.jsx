@@ -1,5 +1,7 @@
 // first_attempt.jsx
 /* eslint-disable @stylistic/max-statements-per-line */
+///////////////////////////////
+// CURRENTLY THIS SCREEN IS NO LONGER BEING USED IN THE TEST
 import React from 'react';
 import useStore from '../../store/index.js';
 import styles from './welcome.module.scss';

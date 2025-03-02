@@ -1,7 +1,7 @@
 // general_instructions.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import useStore from '../../store';
-import styles from '../welcome/welcome.module.scss';
+import styles from './welcome.module.scss';
 
 export const GeneralInstructionsText = () => {
   return (
@@ -25,12 +25,66 @@ export const GeneralInstructionsText = () => {
 };
 
 export const GeneralInstructions = () => {
-  const nextScreen = useStore(({ testSlice }) => testSlice.nextScreen);
+  const nextScreen = useStore(({ welcomeSlice }) => welcomeSlice.nextScreen);
+  // originally, when GeneralInstructions was part of the screenArray, it used the testSlice.nextScreen. That had some extra functionality: setting currentScreen.counterbalanced.screenIndex++ (to one), and setting currentScreen.whichScreen to 'SpecificInstructions'. But now both are initialized as such, and don't require setting.
   return (
     <div className={styles.container}>
       <GeneralInstructionsText />
       { /* NextScreen button */}
-      <button onClick={nextScreen} className={styles.navButton}>Next Screen</button>
+      <button onClick={() => nextScreen('Test')} className={styles.navButton}>Next Screen</button>
+    </div>
+  );
+};
+
+export default GeneralInstructions;
+
+export const BetaShortcuts = () => {
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const betaShortcutTo = useStore((state) => state.testSlice.betaShortcutTo);
+  return (
+    <div>
+      <br />
+      <button
+        className={styles.navButton}
+        onClick={() => {
+          setShowShortcuts((prev) => !prev);
+          setTimeout(() => { // Delay scrolling slightly to ensure the buttons have rendered
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }, 100);
+          console.log('scroll');
+        }}
+      >
+        {showShortcuts ? 'Hide' : 'Show'} Shortcuts
+      </button>
+      {showShortcuts && (
+        <div className={styles.container}>
+          <h2 className={styles.subtitle}>Shortcuts through test</h2>
+          <p>(only available for Sandbox Mode)</p>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(1)}>Echo Names1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(3)}>Recall Names1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(5)}>Echo Names2</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(7)}>Recall Names2</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(9)}>Echo Objects1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(11)}>Recall Objects1</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(13)}>Echo Objects2</button>
+          <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(15)}>Recall Objects2</button>
+          <br />
+        </div>
+      )}
     </div>
   );
 };

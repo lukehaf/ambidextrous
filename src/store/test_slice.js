@@ -36,6 +36,9 @@ function createQuarterResults({ lapsEcho, repsEcho, lapsRecall, dominoHeight }) 
 
 export default function createTestSlice(set) {
   return {
+    nthParticipant: null,
+    setNthParticipant: (nth) => set((draftState) => { draftState.testSlice.nthParticipant = nth; }, false, 'setNthParticipant'),
+
     results: { // initialize 4 quarter-results: (2 namesOrObjects x 2 listHalf)
       names: { one: createQuarterResults(HARD.names), two: createQuarterResults(HARD.names) },
       objects: { one: createQuarterResults(HARD.objects), two: createQuarterResults(HARD.objects) },
@@ -99,60 +102,16 @@ export default function createTestSlice(set) {
         listHalf: null,
         echoOrRecall: null,
         // this array contains the counterbalanced order (of screens) for this participant. Eg names1 names2 objects1 objects2.
-        screenIndex: 0, // increments along the array. The value is sent to whichScreen. Incremented by incrementKeys
-        screenArray: ((nthParticipant) => {
-          // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
-          const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
-          const names2 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
-          const objects1 = ['SpecificInstructions', 'EchoObjects', 'SpecificInstructions', 'Recall'];
-          const objects2 = ['SpecificInstructions', 'EchoObjects', 'SpecificInstructions', 'Recall'];
-          // allocate 4 counterbalanced orders equally between participants. Cycle through 4 orders.
-          let order = [];
-          switch (nthParticipant % 4) {
-            case 0:
-              order = [names1, names2, objects1, objects2];
-              break;
-            case 1:
-              order = [names2, names1, objects2, objects1];
-              break;
-            case 2:
-              order = [objects1, objects2, names1, names2];
-              break;
-            case 3:
-              order = [objects2, objects1, names2, names1];
-              break;
-          };
-          return ['GeneralInstructions', ...order.flat(), 'SelfReport', 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
-        })(HARD.nthParticipant), // an Immediately Invoked Function Expression. Wrap an arrow function in parentheses, and pass it an argument in parentheses. (()=>{})() runs once and that's it. Great for initializing.
-        keysArray: ((nthParticipant) => {
-          // where counterbalanced.screenArray holds 'SpecificInstructions', keysArray needs to hold a 3-key object (with which to initialize currentScreen).
-          const names1 = [{ namesOrObjects: 'names', listHalf: 'one', echoOrRecall: 'echo' }, null, { namesOrObjects: 'names', listHalf: 'one', echoOrRecall: 'recall' }, null];
-          const names2 = [{ namesOrObjects: 'names', listHalf: 'two', echoOrRecall: 'echo' }, null, { namesOrObjects: 'names', listHalf: 'two', echoOrRecall: 'recall' }, null];
-          const objects1 = [{ namesOrObjects: 'objects', listHalf: 'one', echoOrRecall: 'echo' }, null, { namesOrObjects: 'objects', listHalf: 'one', echoOrRecall: 'recall' }, null];
-          const objects2 = [{ namesOrObjects: 'objects', listHalf: 'two', echoOrRecall: 'echo' }, null, { namesOrObjects: 'objects', listHalf: 'two', echoOrRecall: 'recall' }, null];
-          let order = [];
-          switch (nthParticipant % 4) {
-            case 0:
-              order = [names1, names2, objects1, objects2];
-              break;
-            case 1:
-              order = [names2, names1, objects2, objects1];
-              break;
-            case 2:
-              order = [objects1, objects2, names1, names2];
-              break;
-            case 3:
-              order = [objects2, objects1, names2, names1];
-              break;
-          };
-          return [null, ...order.flat()]; // flatten [names1, names2, objects1, objects2] into a single-level array of nulls and objects. By default, flat() only flattens the top level. It is not capable of flattening an object.
-        })(HARD.nthParticipant),
+        screenIndex: 0, // increments along the array. The value is sent to whichScreen. Incremented by incrementKeys.
+        screenArray: null, // set by initializeCounterbalanced, once 'Begin Test' or 'Beta Testers' has been clicked (on the onboarding screen). screenArray and keysArray aren't yet needed by GeneralInstructions, but they WILL need to be ready by the time SpecificInstructions has its 'Next Screen' button clicked.
+        keysArray: null, // set by initializeCounterbalanced, once 'Begin Test' or 'Beta Testers' has been clicked (on the onboarding screen).
+        initialized: false, // to disable the first <SpecificInstructions />'s Next Screen button, until screenArray and keysArray are available for it to increment them
       },
       // This section of currentScreen is listened to by components. (One store-object per component; this prevents listening overlaps & side-effects.) Favor the components listening directly, rather than passing them props.
       // Each <component>Pointer contains pointers & display-state:
       // // // Pointers: subset `presentables` and `results`; (this clears out ugly array-sifting logic from the components). (Naming-rule: append "pointer" to a state-object's name whenever its purpose is to subset 'presentables' or 'results'.)
       // // // Display-state: (WOULD be feasible to calculate within the component, via pointers/presentables/results). HOWEVER, it's another opportunity to declutter/hide logic, just like the pointers allow.
-      whichScreen: 'GeneralInstructions',
+      whichScreen: 'SpecificInstructions', // initialized as this, rather than relying on initializeCounterbal to be finished yet. (which was triggered by "Beta Testers" or "Begin Test" button in <Onboarding />, and now which only needs to be complete by the time <GeneralInstructions /> has led to <SpecificInstructions />, and not even then until the <SpecificInstructions /> next screen button is clicked.)
       echoPointer: { // listened to by the EchoNames component and the EchoObjects component
         // EchoNames and EchoObjects listens to a reset key, which resets both their Domino and timebar
         dominoResetKey: null,
@@ -322,49 +281,112 @@ export default function createTestSlice(set) {
         currentScreen.recallPointer.dominoResetKeys[pairIndex][leftOrRight] = `leftOrRight:${leftOrRight}-attempt:${currentScreen.attempt}-thisPairNeedsReinforcement:${thisPairNeedsReinforcement}`;
       }, false, 'submitBad.recall'),
     },
-    nextScreen: () => set((draftState) => {
-      // an object ref, whose keys we'll mutate:
+    nextScreen: () => set((draftState) => { // only called by the SpecificInstructions 'Next Screen' button. (no longer handles the GeneralInstructions 'Next Screen' button case.)
+      // an object ref, whose keys we'll mutate. Update them for the next 8th of the test. keysArray provides the values, and won't be mutated.
       const { counterbalanced: ctb } = draftState.testSlice.currentScreen; // (renamed it ctb for brevity)
-      // 4 primitives, which won't be mutated:
+      // data source: 3 primitives, which won't be mutated:
       const { namesOrObjects, listHalf, echoOrRecall } = ctb.keysArray[ctb.screenIndex] || {}; // default to an empty object. Every other keysArray entry is null.
-      const { whichScreen } = draftState.testSlice.currentScreen;
 
-      if (whichScreen === 'SpecificInstructions') { // it's ok to update the keys. keysArray has values for them, here. Update them for the next 8th of the test.
-        ctb.namesOrObjects = namesOrObjects; // if !== 'SpecificInstructions', then nextScreen was triggered by finishing an 8th of the test, and we actually want the ctb keys to persist (so the next SpecificInstructions can read them, and know what was just completed).
-        ctb.listHalf = listHalf;
-        ctb.echoOrRecall = echoOrRecall;
+      // update keys!
+      ctb.namesOrObjects = namesOrObjects; // if !== 'SpecificInstructions', then nextScreen was triggered by finishing an 8th of the test, and we actually want the ctb keys to persist (so the next SpecificInstructions can read them, and know what was just completed).
+      ctb.listHalf = listHalf;
+      ctb.echoOrRecall = echoOrRecall;
 
-        // attempt = 0 is conceptually an "incrementKeys" task, not a "derivedKeys" task
-        draftState.testSlice.currentScreen.attempt = 0;
+      // attempt = 0 is conceptually an "incrementKeys" task, not a "derivedKeys" task
+      draftState.testSlice.currentScreen.attempt = 0;
 
-        // generic increment logic for whichScreen, using screenIndex to subset screenArray. It renders the next screen, which requires that all the derivedKeys are ready. But render should wait for this batch of synchronous changes, including all the derivedKeys. So this can go above the derivedKeys call.
-        ctb.screenIndex++;
-        draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[ctb.screenIndex];
+      // generic increment logic for whichScreen, using screenIndex to subset screenArray. It renders the next screen, which requires that all the derivedKeys are ready. But render should wait for this batch of synchronous changes, including all the derivedKeys. So this can go above the derivedKeys call.
+      ctb.screenIndex++;
+      draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[ctb.screenIndex];
 
-        // call derivedKeys, which contains logic to initialize the rest of the keys
-        if (echoOrRecall === 'echo') {
-          derivedKeys.echo(draftState, { init: true });
-        }
-        else if (echoOrRecall === 'recall') {
-          const whichFocus = draftState.testSlice.currentScreen.whichFocus;
-          whichFocus.pairIndex = 0;
-          whichFocus.leftOrRight = 'leftHalf';
-          derivedKeys.recall(draftState, whichFocus, { init: true });
-        }
+      // call derivedKeys, which contains logic to initialize the rest of the keys
+      if (echoOrRecall === 'echo') {
+        derivedKeys.echo(draftState, { init: true });
       }
-      else if (whichScreen === 'GeneralInstructions') {
-        // generic increment logic for whichScreen, using screenIndex to subset screenArray.
-        ctb.screenIndex++;
-        draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[ctb.screenIndex];
+      else if (echoOrRecall === 'recall') {
+        const whichFocus = draftState.testSlice.currentScreen.whichFocus;
+        whichFocus.pairIndex = 0;
+        whichFocus.leftOrRight = 'leftHalf';
+        derivedKeys.recall(draftState, whichFocus, { init: true });
       }
       window.scrollTo(0, 0);
     }, false, 'nextScreen'),
-    sandboxShortcutTo: (screenIndex) => set((draftState) => {
+
+    // Below lies a menagerie of smaller setters
+
+    betaShortcutTo: (screenIndex) => set((draftState) => { // handles getting you to the next SpecificInstructions, if you're using the beta testing shortcuts
       const { currentScreen } = draftState.testSlice;
       currentScreen.counterbalanced.screenIndex = screenIndex;
       currentScreen.whichScreen = 'SpecificInstructions';
       window.scrollTo(0, 0);
-    }, false, 'sandboxShortcutTo'),
+    }, false, 'betaShortcutTo'),
+
+    // Oh, and one last big setter:
+    // Purpose: initialize counterbalanced.screenArray and counterbalanced.keysArray, which are part of currentScreen. It assigns different orders through the test based on nthParticipant.
+    initCounterbal: ({ beta, nth }) => set((draftState) => { // just a wrapper for initializeCurrent, to give it draftState & nthParticipant = 0. (only used in the Beta Testers case where we want to initializeCurrent using a hardcoded nthParticipant = 0, instead of fetching that from the server.)
+      if (beta === true) {
+        initializeCounterbal(0); // use an nthParticipant of 0 for beta testers, or the server-decided nthParticipant for everyone else.
+      }
+      else if (nth !== undefined) {
+        // await?
+        initializeCounterbal(nth);
+      }
+      // ok, here's the function which does the initializing
+      function initializeCounterbal(nthParticipant) {
+        const { counterbalanced } = draftState.testSlice.currentScreen;
+        counterbalanced.screenArray = generateScreenArray(nthParticipant);
+        counterbalanced.keysArray = generateKeysArray(nthParticipant);
+        counterbalanced.initialized = true;
+
+        function generateScreenArray(nthParticipant) {
+          // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
+          const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
+          const names2 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
+          const objects1 = ['SpecificInstructions', 'EchoObjects', 'SpecificInstructions', 'Recall'];
+          const objects2 = ['SpecificInstructions', 'EchoObjects', 'SpecificInstructions', 'Recall'];
+          // allocate 4 counterbalanced orders equally between participants. Cycle through 4 orders.
+          let order = [];
+          switch (nthParticipant % 4) {
+            case 0:
+              order = [names1, names2, objects1, objects2];
+              break;
+            case 1:
+              order = [names2, names1, objects2, objects1];
+              break;
+            case 2:
+              order = [objects1, objects2, names1, names2];
+              break;
+            case 3:
+              order = [objects2, objects1, names2, names1];
+              break;
+          };
+          return [...order.flat(), 'SelfReport', 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
+        };
+        function generateKeysArray(nthParticipant) {
+          // where counterbalanced.screenArray holds 'SpecificInstructions', keysArray needs to hold a 3-key object (with which to initialize currentScreen).
+          const names1 = [{ namesOrObjects: 'names', listHalf: 'one', echoOrRecall: 'echo' }, null, { namesOrObjects: 'names', listHalf: 'one', echoOrRecall: 'recall' }, null];
+          const names2 = [{ namesOrObjects: 'names', listHalf: 'two', echoOrRecall: 'echo' }, null, { namesOrObjects: 'names', listHalf: 'two', echoOrRecall: 'recall' }, null];
+          const objects1 = [{ namesOrObjects: 'objects', listHalf: 'one', echoOrRecall: 'echo' }, null, { namesOrObjects: 'objects', listHalf: 'one', echoOrRecall: 'recall' }, null];
+          const objects2 = [{ namesOrObjects: 'objects', listHalf: 'two', echoOrRecall: 'echo' }, null, { namesOrObjects: 'objects', listHalf: 'two', echoOrRecall: 'recall' }, null];
+          let order = [];
+          switch (nthParticipant % 4) {
+            case 0:
+              order = [names1, names2, objects1, objects2];
+              break;
+            case 1:
+              order = [names2, names1, objects2, objects1];
+              break;
+            case 2:
+              order = [objects1, objects2, names1, names2];
+              break;
+            case 3:
+              order = [objects2, objects1, names2, names1];
+              break;
+          };
+          return [...order.flat()]; // flatten [names1, names2, objects1, objects2] into a single-level array of nulls and objects. By default, flat() only flattens the top level. It is not capable of flattening an object.
+        };
+      }
+    }, false, 'initCounterbal'),
 
     //////////////////////////////////////////////////////////////////
     // LEGACY CODE. GRADUALLY MOVE EVERYTHING BELOW UP INTO THE DESIRED 3 DATASTRUCTURES.
