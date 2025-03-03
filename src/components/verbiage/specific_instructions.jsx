@@ -46,7 +46,7 @@ const SpecificInstructions = () => {
             <div style={{ display: 'flex' }} // places the button and text side by side
             >
               <button disabled>Next Screen</button>
-              <div style={{ color: 'red' }}>Still waiting for server. If this takes more than a few seconds, email Luke</div>
+              <div style={{ color: 'red' }}>Waiting for server. Please allow up to 45 seconds, since I am having to make do with a free tier of the server. -Luke </div>
             </div>
           )}
           {allowNextScreen && (

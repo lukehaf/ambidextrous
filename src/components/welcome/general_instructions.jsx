@@ -41,6 +41,8 @@ export default GeneralInstructions;
 export const BetaShortcuts = () => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const betaShortcutTo = useStore((state) => state.testSlice.betaShortcutTo);
+  const submitResults = useStore((state) => state.testSlice.submitResults);
+  const resultsSubmissionSuccess = useStore((state) => state.testSlice.resultsSubmissionSuccess);
   return (
     <div>
       <br />
@@ -51,7 +53,6 @@ export const BetaShortcuts = () => {
           setTimeout(() => { // Delay scrolling slightly to ensure the buttons have rendered
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
           }, 100);
-          console.log('scroll');
         }}
       >
         {showShortcuts ? 'Hide' : 'Show'} Shortcuts
@@ -59,30 +60,45 @@ export const BetaShortcuts = () => {
       {showShortcuts && (
         <div className={styles.container}>
           <h2 className={styles.subtitle}>Shortcuts through test</h2>
-          <p>(only available for Sandbox Mode)</p>
-          <button className={styles.navButton} onClick={() => betaShortcutTo(1)}>Echo Names1</button>
+          <p>(only available for Beta Testers)</p>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(0)}>Echo Names1</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(3)}>Recall Names1</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(2)}>Recall Names1</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(5)}>Echo Names2</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(4)}>Echo Names2</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(7)}>Recall Names2</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(6)}>Recall Names2</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(9)}>Echo Objects1</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(8)}>Echo Objects1</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(11)}>Recall Objects1</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(10)}>Recall Objects1</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(13)}>Echo Objects2</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(12)}>Echo Objects2</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(15)}>Recall Objects2</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(14)}>Recall Objects2</button>
           <br />
+          <br />
+          <button className={styles.navButton} onClick={() => betaShortcutTo(16)}>Results Submission Page</button>
+          <br />
+          <br />
+          <button onClick={submitResults}>button to submit "results" datastructure, right now</button>
+          {resultsSubmissionSuccess === false && (
+            <p style={{ color: 'red' }}>
+              Please do not navigate away... waiting for server confirmation
+              <br />
+              (this should take less than a minute)
+            </p>
+          )}
+          {resultsSubmissionSuccess === true && (
+            <p>Results submitted successfully. Thank you for participating, and it is now safe to close the test! </p>
+          )}
         </div>
       )}
     </div>

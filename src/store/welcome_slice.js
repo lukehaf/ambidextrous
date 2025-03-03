@@ -1,7 +1,8 @@
 // welcome_slice.js
 /* eslint-disable @stylistic/max-statements-per-line */
 import axios from 'axios';
-const ROOT_URL = 'https://ambi-server.onrender.com/api';
+// const ROOT_URL = 'https://ambi-server.onrender.com/api';
+export const ROOT_URL = 'http://localhost:9090/api';
 
 export default function createWelcomeSlice(set, get) {
   return {
@@ -16,6 +17,8 @@ export default function createWelcomeSlice(set, get) {
     },
     beta: false,
     setBeta: (boolean) => set((draftState) => { draftState.welcomeSlice.beta = boolean; }, false, 'setBeta(true)'),
+    serverSays: null,
+    setServerSays: (message) => set((draftState) => { draftState.welcomeSlice.serverSays = message; }, false, 'setServerSays'),
     fetchNth: {
       noID: async () => {
         try { // create an nthParticipant in the server using axios, and return the nthParticipant #
@@ -29,6 +32,28 @@ export default function createWelcomeSlice(set, get) {
           get().errorSlice.newError(error.message);
         }
       },
+      withID: async (event) => {
+        event.preventDefault(); // on form submit, default behavior is to reload the browser.
+        get().welcomeSlice.setServerSays('nothingYet');
+
+        // submit to backend.
+        const studentID = event.target.studentID.value.trim(); // trim whitespace
+        try {
+          const response = await axios.post(`${ROOT_URL}/nth/with-ID`, { studentID }); // This sends {studentID: 'f004gkb'}
+          const serverSays = response.data.serverSays; // As a response, I'm having this route return the actual document that was saved, plus an extra serverSays key. Perfect! It's an object with a key called nthParticipant.
+          get().welcomeSlice.setServerSays(serverSays);
+
+          if (serverSays === 'proceed') {
+            const nthParticipant = response.data.nthParticipant;
+            get().testSlice.initCounterbal({ nth: nthParticipant });
+            get().testSlice.setNthParticipant(nthParticipant);
+          }
+        }
+        catch (error) {
+          get().errorSlice.newError('error submitting student ID: ', error.message);
+        }
+      },
+
     },
   };
 }

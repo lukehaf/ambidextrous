@@ -5,63 +5,45 @@ import styles from './welcome.module.scss';
 
 const DartmouthOnboarding = () => {
   const nextScreen = useStore(({ welcomeSlice }) => welcomeSlice.nextScreen);
+  const serverSays = useStore(({ welcomeSlice }) => welcomeSlice.serverSays);
+  const fetchNth = useStore(({ welcomeSlice }) => welcomeSlice.fetchNth);
   return (
     <div>
       <div className={styles.container} style={{ textAlign: 'center' }}>
         <h2 className={styles.prompt}>Please enter your Dartmouth ID: </h2>
-        <input
-          type="text"
-          id="studentID"
-          name="studentID"
-          pattern="f00\d{4}"
-          placeholder="f00xxxx"
-          maxLength="7"
-          required
-        />
-      </div>
-      <div className={styles.container} style={{ textAlign: 'center' }}>
-        <h2 className={styles.prompt}>Please enter your Dartmouth ID: </h2>
-        <input
-          type="text"
-          id="studentID"
-          name="studentID"
-          pattern="f00\d{4}"
-          placeholder="f00xxxx"
-          maxLength="7"
-          required
-        />
-        <p>Unrecognized Dartmouth ID format. Please try again</p>
-      </div>
-      <div className={styles.container} style={{ textAlign: 'center' }}>
-        <h2 className={styles.prompt}>Please enter your Dartmouth ID: </h2>
-        <input
-          type="text"
-          id="studentID"
-          name="studentID"
-          pattern="f00\d{4}"
-          placeholder="f00xxxx"
-          maxLength="7"
-          required
-        />
-        <p>This Dartmouth ID has already completed the test. Thank you for participating!</p>
-      </div>
-      <div className={styles.container} style={{ textAlign: 'center' }}>
-        <h2 className={styles.prompt}>Please enter your Dartmouth ID: </h2>
-        <input
-          type="text"
-          id="studentID"
-          name="studentID"
-          pattern="f00\d{4}"
-          placeholder="f00xxxx"
-          maxLength="7"
-          required
-        />
-        <p>Thank you! ID was approved.</p>
-        <button
-          className={styles.navButton}
-          onClick={() => nextScreen('FirstAttempt')} // (check that on their past attempt they got far enough to hit “begin test”. Entering your email but not having begun it yet is still valid.)
-        >Begin Test
-        </button>
+        <form onSubmit={fetchNth.withID}>
+          <input
+            type="text"
+            name="studentID"
+            pattern="f00[a-zA-Z0-9]{4}"
+            placeholder="f00xxxx"
+            maxLength="7"
+            required
+          />
+          <button type="submit">Submit</button>
+        </form>
+        {serverSays === 'nothingYet' && (
+          <p>
+            <span>Submitted!</span>
+            <span style={{ color: 'red' }}>Waiting for server. Please allow up to 45 seconds, since I am having to make do with a free tier of the server. This wait is just for the initial connection. -Luke</span>
+          </p>
+        )}
+        {serverSays === 'invalid' && (
+          <p>Unrecognized Dartmouth ID format. Please try again</p>
+        )}
+        {serverSays === 'taken' && (
+          <p>This Dartmouth ID has already completed the test. Thank you for participating!</p>
+        )}
+        {serverSays === 'proceed' && (
+          <div>
+            <p>Thank you! ID was approved.</p>
+            <button
+              className={styles.navButton}
+              onClick={() => nextScreen('GeneralInstructions')}
+            >Begin Test
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
