@@ -51,38 +51,51 @@ const DartmouthOnboarding = () => {
 
 const NonDartOnboarding = () => {
   const nextScreen = useStore(({ welcomeSlice }) => welcomeSlice.nextScreen);
-  const { initCounterbal } = useStore((state) => state.testSlice);
-  const { setBeta, fetchNth } = useStore((state) => state.welcomeSlice);
+  const { fetchNth } = useStore((state) => state.welcomeSlice);
+  // const { initCounterbal } = useStore((state) => state.testSlice);
+  // const { setBeta, fetchNth } = useStore((state) => state.welcomeSlice);
 
   const handleBeginTest = () => {
     nextScreen('GeneralInstructions');
     fetchNth.noID(); // This setter makes an axios call (and then calls initCounterbal)
   };
-  const handleBetaTesters = () => {
-    nextScreen('GeneralInstructions');
-    initCounterbal({ beta: true }); // initializes counterbalanced.screenArray and counterbalanced.keysArray. They aren't yet needed by GeneralInstructions, but they WILL need to be ready by the time SpecificInstructions has its 'Next Screen' button clicked.
-    setBeta(true); // is this a race condition with nextScreen? I don't think so, since they don't depend on each other. <GeneralInstructions /> and {beta && <BetaShortcuts />} simply render next to each other in <App />.
-  };
 
   return (
     <div className={styles.container} style={{ textAlign: 'center' }}>
       <div className={styles.navbar}>
-        <div className={styles.navbar_left}>
-          <button className={styles.navButton} onClick={handleBeginTest}>Begin Test
-          </button>
-        </div>
-        <div className={styles.navbar_right}>
-          <button className={styles.navButton} onClick={handleBetaTesters}>Beta Testers
-          </button>
-        </div>
+        <button className={styles.navButton} onClick={handleBeginTest}>Begin Test
+        </button>
       </div>
     </div>
   );
+  // const handleBetaTesters = () => {
+  //   nextScreen('GeneralInstructions');
+  //   initCounterbal({ beta: true }); // initializes counterbalanced.screenArray and counterbalanced.keysArray. They aren't yet needed by GeneralInstructions, but they WILL need to be ready by the time SpecificInstructions has its 'Next Screen' button clicked.
+  //   setBeta(true); // is this a race condition with nextScreen? I don't think so, since they don't depend on each other. <GeneralInstructions /> and {beta && <BetaShortcuts />} simply render next to each other in <App />.
+  // };
+
+  // VERSION FOR BETA TESTING
+  // return (
+  //   <div className={styles.container} style={{ textAlign: 'center' }}>
+  //     <div className={styles.navbar}>
+  //       <div className={styles.navbar_left}>
+  //         <button className={styles.navButton} onClick={handleBeginTest}>Begin Test
+  //         </button>
+  //       </div>
+  //       <div className={styles.navbar_right}>
+  //         <button className={styles.navButton} onClick={handleBetaTesters}>Beta Testers
+  //         </button>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 };
 
 const Onboarding = () => {
   // for conditional render
   const [whichOnboarding, setWhichOnboarding] = useState(null);
+  // for modal
+  const [showModal, setShowModal] = useState(true);
   // handle scrolling
   const onboardRef = useRef(null);
   const showAndScroll = (screen) => {
@@ -109,10 +122,22 @@ const Onboarding = () => {
         <div className={styles.navbar}>
           <div className={styles.navbar_left} />
           <div className={styles.navbar_right}>
-            <p className={styles.greyText} style={{ textAlign: 'left' }}>If you would willing to take the test as a friend (no Dartmouth ID, no compensation), this help is much appreciated-- there is only enough funding available for 25 participants, after which the button on the left will close</p>
+            <p className={styles.greyText} style={{ textAlign: 'left' }}>If you would willing to take the test as a friend (no Dartmouth ID, no compensation), this help is much appreciated-- there is only enough funding available for 25 participants, after which the button on the left will no longer be available</p>
           </div>
         </div>
       </div>
+
+      {showModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <p>
+              Caution-- proceeding with onboarding begins the test! The test cannot be restarted. Please make sure that you have a full 20-30 minutes available, and that you are accessing the test on a laptop (for the sake of the typing challenge).
+            </p>
+            <button className={styles.modalButton} onClick={() => setShowModal(false)}>Proceed</button>
+          </div>
+        </div>
+      )}
+
       <div ref={onboardRef}>
         {whichOnboarding === 'DartmouthOnboarding' && <DartmouthOnboarding />}
         {whichOnboarding === 'NonDartOnboarding' && <NonDartOnboarding />}
