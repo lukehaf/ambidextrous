@@ -1,8 +1,8 @@
 // welcome_slice.js
 /* eslint-disable @stylistic/max-statements-per-line */
 import axios from 'axios';
-// export const ROOT_URL = 'https://ambi-server.onrender.com/api';
-export const ROOT_URL = 'http://localhost:9090/api';
+export const ROOT_URL = 'https://ambi-server.onrender.com/api';
+// export const ROOT_URL = 'http://localhost:9090/api';
 
 export default function createWelcomeSlice(set, get) {
   return {
