@@ -1,9 +1,31 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import useStore from '../../store/index.js';
 import styles from './domino_stack.module.scss';
 import stylesWelcome from '../welcome/welcome.module.scss';
 
 import Domino from './domino.jsx';
+import { GeneralInstructionsText } from '../welcome/general_instructions.jsx';
+
+const TestingInstructionsText = () => {
+  return (
+    <div>
+      <h2 className={styles.prompt}>Instructions for Testing Phase:</h2>
+      <ul>
+        <li>In the grid format, type each pair of words.</li>
+        <li>You will perform the grid 3 times in a row.</li>
+        <li>Goal: 100% accuracy by the 3rd grid.</li>
+        <li>If you’re not sure of a word, type your best guess. (Only click the IDK button if you cannot get it right).</li>
+      </ul>
+      <h2 className={styles.prompt}>Typing Instructions:</h2>
+      <ul>
+        <li>Type what you see in the grey text.</li>
+        <li>Everything is lowercase.</li>
+        <li>Use Backspace for typing mistakes.</li>
+        <li>Use the Spacebar between words AND use the Spacebar to submit your entry.</li>
+      </ul>
+    </div>
+  );
+};
 
 const TestProgress = () => {
   const { whichFocus, attempt } = useStore((state) => state.testSlice.currentScreen);
@@ -45,6 +67,8 @@ const Recall = () => {
   useEffect(() => {
     restoreFocus();
   }, [whichFocus]);
+  // for toggling instructions
+  const [showInstructions, setShowInstructions] = useState(false);
 
   return (
     <div>
@@ -79,6 +103,30 @@ const Recall = () => {
         ))}
       </div>
       <TestProgress />
+      <div>
+        <br />
+        <button
+          className={styles.navButton}
+          onClick={() => {
+            setShowInstructions((prev) => !prev);
+            setTimeout(() => { // Delay scrolling slightly to ensure the buttons have rendered
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 100);
+          }}
+        >
+          {showInstructions ? 'Hide' : 'Show'} Instructions
+        </button>
+        {showInstructions && (
+          <div>
+            <div className={stylesWelcome.container}>
+              <TestingInstructionsText />
+            </div>
+            <div className={stylesWelcome.container}>
+              <GeneralInstructionsText />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

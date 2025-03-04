@@ -106,6 +106,12 @@ const Onboarding = () => {
             <button className={styles.navButton} onClick={() => showAndScroll('NonDartOnboarding')}>No Dartmouth ID (for friends and family)</button>
           </div>
         </div>
+        <div className={styles.navbar}>
+          <div className={styles.navbar_left} />
+          <div className={styles.navbar_right}>
+            <p className={styles.greyText} style={{ textAlign: 'left' }}>If you would willing to take the test as a friend (no Dartmouth ID, no compensation), this help is much appreciated-- there is only enough funding available for 25 participants, after which the button on the left will close</p>
+          </div>
+        </div>
       </div>
       <div ref={onboardRef}>
         {whichOnboarding === 'DartmouthOnboarding' && <DartmouthOnboarding />}

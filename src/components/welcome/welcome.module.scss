@@ -13,7 +13,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // what's this do?
 }
 
-p { // used by WelcomeText
+p, ul { // used by WelcomeText
   font-size: 1rem;
   color: #34495e;
   margin-bottom: 10px;
@@ -22,7 +22,8 @@ p { // used by WelcomeText
 
 .greyText {
   color: #818b94;
-  margin-left: 20px;
+  margin-left: 0px;
+  font-size: 1rem;
 }
 // /////////////////////////////////////////////////////
 /// styles for navBar

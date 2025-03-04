@@ -14,15 +14,14 @@ function App(props) {
   useDisableBackButton();
   usePreventReload();
   const currentScreen = useStore(({ welcomeSlice }) => welcomeSlice.currentScreen);
-  // const beta = useStore(({ welcomeSlice }) => welcomeSlice.beta);
-  // {beta && <BetaShortcuts />}
+  const beta = useStore(({ welcomeSlice }) => welcomeSlice.beta);
   return (
     <div>
       {currentScreen === 'Welcome' && <Welcome />}
       {currentScreen === 'Onboarding' && <Onboarding />}
       {currentScreen === 'GeneralInstructions' && <GeneralInstructions />}
       {currentScreen === 'Test' && <Test />}
-      <BetaShortcuts />
+      {beta && <BetaShortcuts />}
       <ToastContainer
         position="bottom-right"
         autoClose={false}

@@ -113,7 +113,7 @@ export default function createTestSlice(set, get) {
       // Each <component>Pointer contains pointers & display-state:
       // // // Pointers: subset `presentables` and `results`; (this clears out ugly array-sifting logic from the components). (Naming-rule: append "pointer" to a state-object's name whenever its purpose is to subset 'presentables' or 'results'.)
       // // // Display-state: (WOULD be feasible to calculate within the component, via pointers/presentables/results). HOWEVER, it's another opportunity to declutter/hide logic, just like the pointers allow.
-      whichScreen: 'SpecificInstructions', // initialized as this, rather than relying on initializeCounterbal to be finished yet. (which was triggered by "Beta Testers" or "Begin Test" button in <Onboarding />, and now which only needs to be complete by the time <GeneralInstructions /> has led to <SpecificInstructions />, and not even then until the <SpecificInstructions /> next screen button is clicked.)
+      whichScreen: null, // Begins as either 'FlashcardsLearning' or 'StoryLearning', two of the instructions screens. Set by initCounterbal. (which was triggered by "Beta Testers" or "Begin Test" button in <Onboarding />, and which needs to be complete by the time <GeneralInstructions />'s next screen button is clicked.)
       echoPointer: { // listened to by the EchoNames component and the EchoObjects component
         // EchoNames and EchoObjects listens to a reset key, which resets both their Domino and timebar
         dominoResetKey: null,
@@ -319,7 +319,12 @@ export default function createTestSlice(set, get) {
     betaShortcutTo: (screenIndex) => set((draftState) => { // handles getting you to the next SpecificInstructions, if you're using the beta testing shortcuts
       const { currentScreen } = draftState.testSlice;
       currentScreen.counterbalanced.screenIndex = screenIndex;
-      currentScreen.whichScreen = 'SpecificInstructions';
+      // then set Test's screen to the appropriate SpecificInstructions component.
+      const ctb = draftState.testSlice.currentScreen.counterbalanced;
+      currentScreen.whichScreen = ctb.screenArray[screenIndex];
+      // then go to Test
+      get().welcomeSlice.nextScreen('Test');
+
       window.scrollTo(0, 0);
     }, false, 'betaShortcutTo'),
 
@@ -352,10 +357,15 @@ export default function createTestSlice(set, get) {
     initCounterbal: ({ beta, nth }) => set((draftState) => { // just a wrapper for initializeCurrent, to give it draftState & nthParticipant = 0. (only used in the Beta Testers case where we want to initializeCurrent using a hardcoded nthParticipant = 0, instead of fetching that from the server.)
       if (beta === true) {
         initializeCounterbal(0); // use an nthParticipant of 0 for beta testers, or the server-decided nthParticipant for everyone else.
+        // then set Test's screen to the appropriate SpecificInstructions component.
+        const ctb = draftState.testSlice.currentScreen.counterbalanced;
+        draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[0];
       }
       else if (nth !== undefined) {
-        // await?
         initializeCounterbal(nth);
+        // then set Test's screen to the appropriate SpecificInstructions component.
+        const ctb = draftState.testSlice.currentScreen.counterbalanced;
+        draftState.testSlice.currentScreen.whichScreen = ctb.screenArray[0];
       }
       // ok, here's the function which does the initializing
       function initializeCounterbal(nthParticipant) {
@@ -366,10 +376,10 @@ export default function createTestSlice(set, get) {
 
         function generateScreenArray(nthParticipant) {
           // Each quarter of the test gets 4 screens: Instructions, Echo, Instructions, and Recall.
-          const names1 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
-          const names2 = ['SpecificInstructions', 'EchoNames', 'SpecificInstructions', 'Recall'];
-          const objects1 = ['SpecificInstructions', 'EchoObjects', 'SpecificInstructions', 'Recall'];
-          const objects2 = ['SpecificInstructions', 'EchoObjects', 'SpecificInstructions', 'Recall'];
+          const names1 = ['FlashcardsLearning', 'EchoNames', 'FlashcardsTesting', 'Recall'];
+          const names2 = ['FlashcardsLearning', 'EchoNames', 'FlashcardsTesting', 'Recall'];
+          const objects1 = ['StoryLearning', 'EchoObjects', 'StoryTesting', 'Recall'];
+          const objects2 = ['StoryLearning', 'EchoObjects', 'StoryTesting', 'Recall'];
           // allocate 4 counterbalanced orders equally between participants. Cycle through 4 orders.
           let order = [];
           switch (nthParticipant % 4) {
@@ -386,7 +396,7 @@ export default function createTestSlice(set, get) {
               order = [objects2, objects1, names2, names1];
               break;
           };
-          return [...order.flat(), 'SelfReport', 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
+          return [...order.flat(), 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
         };
         function generateKeysArray(nthParticipant) {
           // where counterbalanced.screenArray holds 'SpecificInstructions', keysArray needs to hold a 3-key object (with which to initialize currentScreen).
