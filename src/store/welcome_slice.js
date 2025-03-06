@@ -6,7 +6,7 @@ export const ROOT_URL = 'https://ambi-server.onrender.com/api';
 
 export default function createWelcomeSlice(set, get) {
   return {
-    currentScreen: 'Welcome', // 4 options: 'Welcome', 'Onboarding', 'GeneralInstructions', and 'Test'. Initial screen should be 'Welcome'.
+    currentScreen: 'Welcome', // 5 options: 'Welcome', 'Onboarding', 'GeneralInstructions', 'Test', and 'Questionnaire'. Initial screen should be 'Welcome'.
     consentFormVisible: false, // this could actually just be a useState, local to the Welcome component.
     showConsentForm: () => set((draftState) => { draftState.welcomeSlice.consentFormVisible = true; }, false, 'showConsentForm'),
 

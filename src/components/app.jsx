@@ -8,6 +8,8 @@ import Welcome from './welcome/welcome.jsx';
 import Onboarding from './welcome/onboarding.jsx';
 import GeneralInstructions, { BetaShortcuts } from './welcome/general_instructions.jsx';
 import Test from './test/test.jsx';
+import Questionnaire from './self_report/questionnaire.jsx';
+import SafeToExit from './self_report/safe_to_exit.jsx';
 
 // (props) might be needed here, IDK. Everything I write, though, uses zustand hooks rather than props.
 function App(props) {
@@ -21,6 +23,8 @@ function App(props) {
       {currentScreen === 'Onboarding' && <Onboarding />}
       {currentScreen === 'GeneralInstructions' && <GeneralInstructions />}
       {currentScreen === 'Test' && <Test />}
+      {currentScreen === 'Questionnaire' && <Questionnaire />}
+      {currentScreen === 'SafeToExit' && <SafeToExit />}
       {beta && <BetaShortcuts />}
       <ToastContainer
         position="bottom-right"
