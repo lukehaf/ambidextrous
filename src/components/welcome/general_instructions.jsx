@@ -102,7 +102,7 @@ export const BetaShortcuts = () => {
           <button className={styles.navButton} onClick={() => betaShortcutTo(14)}>Recall Objects2</button>
           <br />
           <br />
-          <button className={styles.navButton} onClick={() => betaShortcutTo(16)}>Results Submission Page</button>
+          <button className={styles.navButton} onClick={() => betaShortcutTo(16)}>Outro Page</button>
           <br />
           <br />
           <button onClick={submitResults}>button to submit "results" datastructure, right now</button>

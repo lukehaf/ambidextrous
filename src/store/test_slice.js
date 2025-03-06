@@ -1,6 +1,7 @@
 // test_slice.js
 import { HARD, incrementKeys, derivedKeys } from './test_logic';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { ROOT_URL } from './welcome_slice'; // const ROOT_URL = 'https://ambi-server.onrender.com/api'; or // 'http://localhost:9090/api';
 
 // testSlice consists of 3 datastructures: results (from all screens), presentables (for all screens), and currentScreen (so the currently-rendered screen knows which part of presentables to draw from, and which part of results to write to). // eventually I could make these 3 datastructures into 3 different slices, I bet. But no need.
@@ -328,23 +329,20 @@ export default function createTestSlice(set, get) {
       window.scrollTo(0, 0);
     }, false, 'betaShortcutTo'),
 
-    resultsSubmissionSuccess: null,
-    setResultsSubmissionSuccess: (boolean) => set((draftState) => { draftState.testSlice.resultsSubmissionSuccess = boolean; }, false, 'setResultsSubmissionSuccess'),
-    submitResults: async () => { // put this on beta shortcuts screen. no need to give it a special version. or maybe do give it a loading. yeah, do.
-      get().testSlice.setResultsSubmissionSuccess(false); // only set this true upon a successful return
-
+    resultsSubmissionSuccess: null, // only set this true upon a successful return from the server. 'notYet' if it's been tried, but haven't heard back yet.
+    setResultsSubmissionSuccess: (message) => set((draftState) => { draftState.testSlice.resultsSubmissionSuccess = message; }, false, 'setResultsSubmissionSuccess'),
+    submitResults: async () => {
       const results = JSON.parse(JSON.stringify(get().testSlice.results)); // copy the whole thing, deeply. I want more than a reference. (This approach uses json methods; serialize and deserialize the whole thing. My datastructure only contains objects and arrays (no functions), so it's json safe.)
       const nthParticipant = get().testSlice.nthParticipant;
       const resultsObject = { nthParticipant, results };
 
+      get().testSlice.setResultsSubmissionSuccess('notYet');
       try {
         const response = await axios.patch(`${ROOT_URL}/results`, resultsObject); // ('https://ambi-server.onrender.com/api/nth/no-ID'); // ('http://localhost:9090/api/nth/no-ID')
         // response should just hold if it was successful or not.
         if (response.data.resultsSubmissionSuccess === true) {
           get().testSlice.setResultsSubmissionSuccess(true);
-        }
-        else if (response.data.resultsSubmissionSuccess !== true) {
-          get().testSlice.setResultsSubmissionSuccess(false); // ideally I'd have a UI presentable which says "returned, but wasn't successful". Rather than just an endless wait.
+          toast.success('results datastructure successfully received');
         }
       }
       catch (error) {
@@ -396,7 +394,7 @@ export default function createTestSlice(set, get) {
               order = [objects2, objects1, names2, names1];
               break;
           };
-          return [...order.flat(), 'Results']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
+          return [...order.flat(), 'Outro']; // .flat() merges nested arrays into a single-level array, and the spread operator unpacks it into its individual components.
         };
         function generateKeysArray(nthParticipant) {
           // where counterbalanced.screenArray holds 'SpecificInstructions', keysArray needs to hold a 3-key object (with which to initialize currentScreen).
