@@ -133,6 +133,12 @@ const Onboarding = () => {
             <p>
               Caution-- proceeding with onboarding begins the test! The test cannot be restarted. Please make sure that you have a full 20-30 minutes available, and that you are accessing the test on a laptop (for the sake of the typing challenge).
             </p>
+            <p>
+              Please use Chrome as your browser. Microsoft Edge is also OK. Safari & DuckDuckGo seem to cause problems.
+            </p>
+            <p>
+              If anything unexpected happens, please email Luke a screenshot, so he can try to fix it! Much appreciated :)
+            </p>
             <button className={styles.modalButton} onClick={() => setShowModal(false)}>Proceed</button>
           </div>
         </div>
