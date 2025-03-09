@@ -113,7 +113,7 @@ const Onboarding = () => {
         <br />
         <div className={styles.navbar}>
           <div className={styles.navbar_left}>
-            <button className={styles.navButton} onClick={() => showAndScroll('DartmouthOnboarding')}>For students with a Dartmouth ID</button>
+            <button disabled style={{ background: '#818b94' }} className={styles.navButton} onClick={() => showAndScroll('DartmouthOnboarding')}>For students with a Dartmouth ID</button>
           </div>
           <div className={styles.navbar_right}>
             <button className={styles.navButton} onClick={() => showAndScroll('NonDartOnboarding')}>No Dartmouth ID (for friends and family)</button>
