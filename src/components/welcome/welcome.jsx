@@ -14,7 +14,7 @@ const WelcomeText = () => {
       <p>by Luke Hafermann, for the Quantitative Social Sciences major<br />(an undergraduate Honors Thesis in QSS)</p>
       <p>Under the Supervision of Arjen Stolk, PhD;<br />Department of Psychological and Brain Sciences</p>
       <p className={styles.invitation}><b>You are invited to participate in a research study!</b></p>
-      <p style={{ color: 'red' }}><b>Study has reached 25 participants, and has no more funding for paid participants. Please feel free to take the test as a friend or family member, however! Study has a goal of roughly 77 participants total.</b></p>
+      <p style={{ color: 'red' }}><b>Study has reached 25 participants, and has no more funding for paid participants. Please feel free to take the test as a friend or family member, however! Study has a goal of roughly 50 participants total.</b></p>
       {/*
           <p>Counter: The test has received complete submissions from {count} participants. Goal: 30 participants.</p>
         */}
